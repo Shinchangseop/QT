@@ -71,7 +71,6 @@ router.post('/discord-login', async (req, res) => {
 });
 
 
-// POST /api/auth/kakao-login
 router.post('/kakao-login', async (req, res) => {
   const { nickname } = req.body;
 
