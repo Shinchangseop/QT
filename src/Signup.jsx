@@ -11,7 +11,7 @@ import { useGoogleLogin } from '@react-oauth/google';
 function Signup() {
   const handleDiscordLogin = () => {
     const clientId = '1359476172420939877';
-    const redirectUri = encodeURIComponent('http://localhost:5173/discord/callback');
+    const redirectUri = encodeURIComponent(import.meta.env.VITE_DISCORD_REDIRECT_URI);
     const scope = 'identify email';
   
     const discordAuthUrl = `https://discord.com/api/oauth2/authorize?response_type=code&client_id=${clientId}&scope=${scope}&redirect_uri=${redirectUri}`;
@@ -33,13 +33,15 @@ function Signup() {
         });
         const user = await userInfoRes.json();
         const { name, email } = user;
-  
-        const response = await fetch('/api/auth/google-login', {
+
+        const API = import.meta.env.VITE_API_BASE_URL;
+
+        const response = await fetch(`${API}/api/auth/google-login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, email }),
         });
-  
+
         const data = await response.json();
         localStorage.setItem('nickname', name);
         localStorage.setItem('user_id', data.user_id);
