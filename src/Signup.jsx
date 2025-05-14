@@ -8,7 +8,11 @@ import { useGoogleLogin } from '@react-oauth/google';
 
 
 
+
 function Signup() {
+  const API = import.meta.env.VITE_API_BASE_URL;
+
+
   const handleDiscordLogin = () => {
     const clientId = '1359476172420939877';
     const redirectUri = encodeURIComponent(import.meta.env.VITE_DISCORD_REDIRECT_URI);
@@ -82,7 +86,7 @@ function Signup() {
 
             if (nickname) {
               try {
-                const response = await fetch('/api/auth/kakao-login', {
+                const response = await fetch(`${API}/api/auth/kakao-login`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ nickname }),
