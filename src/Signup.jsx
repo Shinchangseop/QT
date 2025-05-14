@@ -10,9 +10,6 @@ import { useGoogleLogin } from '@react-oauth/google';
 
 
 function Signup() {
-  const API = import.meta.env.VITE_API_BASE_URL;
-
-
   const handleDiscordLogin = () => {
     const clientId = '1359476172420939877';
     const redirectUri = encodeURIComponent(import.meta.env.VITE_DISCORD_REDIRECT_URI);
@@ -69,6 +66,8 @@ function Signup() {
   }, []);
 
   const handleKakaoLogin = () => {
+    const API = import.meta.env.VITE_API_BASE_URL;
+
     if (!window.Kakao) {
       console.error("Kakao SDK가 로드되지 않았습니다.");
       return;

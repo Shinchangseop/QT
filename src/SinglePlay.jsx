@@ -26,6 +26,7 @@ function SinglePlay() {
   const timerRef = useRef(null); 
   const [player, setPlayer] = useState(null);
   const [startTime, setStartTime] = useState(0);
+  const API = import.meta.env.VITE_API_BASE_URL;
 
   const replaySound = () => {
     if (player && typeof startTime === 'number') {
@@ -304,7 +305,7 @@ function SinglePlay() {
                 ) : currentQuestion.type === 'image' ? (
                   <>
                     <img
-                      src={`http://localhost:5000${currentQuestion.media_url}`}
+                      src={`${API}${currentQuestion.media_url}`}
                       alt="문제 이미지"
                       style={{ maxWidth: '50%', maxHeight: '240px', marginBottom: '12px', borderRadius: '8px', objectFit: 'contain' }}
                     />
