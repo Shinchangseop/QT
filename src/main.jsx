@@ -10,10 +10,8 @@ import EditNew from './EditNew.jsx';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import DiscordCallback from './DiscordCallback.jsx';
 import EditList from './EditList';
-import SinglePlay from './Singleplay.jsx';
+import SinglePlay from "./SinglePlay.jsx";
 import SingleScore from './SingleScore'; 
-
-
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

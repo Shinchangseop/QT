@@ -76,21 +76,31 @@ router.post('/kakao-login', async (req, res) => {
   const { nickname } = req.body;
 
   try {
-    const result = await client.query(
+    const userCheck = await client.query(
       'SELECT user_id FROM "User" WHERE username = $1',
       [nickname]
     );
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: '사용자 없음' });
+    let userId;
+
+    if (userCheck.rows.length === 0) {
+      // 🔥 신규 가입 처리
+      const insertRes = await client.query(
+        'INSERT INTO "User" (username, email, auth_type) VALUES ($1, $2, $3) RETURNING user_id',
+        [nickname, `${nickname}@kakao.com`, 'kakao']
+      );
+      userId = insertRes.rows[0].user_id;
+    } else {
+      userId = userCheck.rows[0].user_id;
     }
 
-    res.json({ user_id: result.rows[0].user_id });
+    res.json({ user_id: userId });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: '서버 오류' });
   }
 });
+
 
 router.post('/google-login', async (req, res) => {
   const { name, email } = req.body;
