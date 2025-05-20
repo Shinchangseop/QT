@@ -254,21 +254,23 @@ useEffect(() => {
   };
 
 const handleSubmit = () => {
-  if (message || !currentQuestion) return;  // 메시지 출력 중에는 제출 금지
-
   const rawInput = inputAnswer.trim().toLowerCase();
 
+  // ✅ 명령어 먼저 처리 (메시지 상관없이 작동하도록!)
   if (rawInput === '!힌트') {
-    handleHint();
+    if (currentQuestion) handleHint();
     setInputAnswer('');
     return;
   }
 
   if (rawInput === '!스킵') {
-    handleSkip();
+    if (currentQuestion) handleSkip();
     setInputAnswer('');
     return;
   }
+
+  // ❌ 이건 나중에!
+  if (message || !currentQuestion) return;
 
   const answers = currentQuestion.answer.split('/').map(a => a.trim().toLowerCase());
   const correct = answers.includes(rawInput);
@@ -284,6 +286,7 @@ const handleSubmit = () => {
     setInputAnswer('');
   }
 };
+
 
 
 
@@ -450,6 +453,7 @@ const handleSubmit = () => {
                 <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '12px', display: 'flex', alignItems: 'center' }}>
                   <input
                     ref={inputRef}
+                    autoFocus
                     type="text"
                     value={inputAnswer}
                     onChange={(e) => setInputAnswer(e.target.value)}
