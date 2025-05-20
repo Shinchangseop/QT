@@ -4,15 +4,18 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const quizRoutes = require('./quizRoutes');
-const questionRoutes = require('./questionRoutes'); // ✅ 추가
+const questionRoutes = require('./questionRoutes');
 const uploadRoutes = require('./uploadRoutes');
 const authRoutes = require('./authRoutes');
 
 app.use(cors());
 
+// ✅ 여기에 추가!
+app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // (optional, form 지원 시)
+
 const path = require('path');
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
 
 app.use('/api/quiz', quizRoutes);
 app.use('/api/question', questionRoutes);
