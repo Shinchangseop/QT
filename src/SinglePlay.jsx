@@ -75,7 +75,7 @@ function SinglePlay() {
   };
 
   const currentQuestion = questions.length > 0 && currentIndex < questions.length ? questions[currentIndex] : null;
-  console.log('📦 현재 문제:', currentQuestion);
+  // console.log('📦 현재 문제:', currentQuestion);
 
   useEffect(() => {
     fetch(`/api/quiz/${quizId}`)
@@ -360,6 +360,7 @@ function SinglePlay() {
                   <input
                     ref={inputRef}
                     type="text"
+                    onFocus={() => playSound(bellSound)} 
                     value={inputAnswer}
                     onChange={(e) => setInputAnswer(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
