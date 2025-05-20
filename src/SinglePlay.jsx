@@ -5,6 +5,13 @@ import './App.css';
 import ReactPlayer from 'react-player';
 import YouTube from 'react-youtube';
 
+import bellSound from './assets/sound/bell.mp3';
+import countdown10 from './assets/sound/countdown10.wav';
+import failSound from './assets/sound/FAIL.MP3';
+import successSound from './assets/sound/SUCCESS.mp3';
+import wrongSound from './assets/sound/SCORE_ALARM.mp3';
+
+
 
 function SinglePlay() {
   const { quizId, count, time, hint } = useParams();
@@ -26,6 +33,20 @@ function SinglePlay() {
   const timerRef = useRef(null); 
   const [player, setPlayer] = useState(null);
   const [startTime, setStartTime] = useState(0);
+  const API = import.meta.env.VITE_API_BASE_URL;
+  const countdownRef = useRef(null);
+  const [introVisible, setIntroVisible] = useState(true);
+  const [questionsLoaded, setQuestionsLoaded] = useState(false);
+  const currentQuestion = !introVisible ? questions[currentIndex] : null;
+  const hasPlayedBell = useRef(false);
+  const wasCountdownPlaying = useRef(false);
+
+
+  const playSound = (file) => {
+    const audio = new Audio(file);
+    audio.play().catch((e) => console.warn('🔇 사운드 재생 실패:', e.message));
+  };
+
 
   const replaySound = () => {
     if (player && typeof startTime === 'number') {
@@ -59,8 +80,57 @@ function SinglePlay() {
     return match ? match[1] : '';
   };
 
-  const currentQuestion = questions.length > 0 && currentIndex < questions.length ? questions[currentIndex] : null;
-  console.log('📦 현재 문제:', currentQuestion);
+  const [audioAllowed, setAudioAllowed] = useState(false);
+
+useEffect(() => {
+  if (!message) {
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0); // 렌더 완료 직후 실행
+  }
+}, [message]);
+
+  useEffect(() => {
+    if (questions.length > 0 && !questionsLoaded) {
+      setQuestionsLoaded(true);
+    }
+  }, [questions]);
+
+  useEffect(() => {
+    if (questionsLoaded) {
+      const introDelay = setTimeout(() => {
+        setIntroVisible(false);
+      }, 3000);
+      return () => clearTimeout(introDelay);
+    }
+  }, [questionsLoaded]);
+
+  useEffect(() => {
+    const allowAudio = () => {
+      setAudioAllowed(true);
+      window.removeEventListener('click', allowAudio);
+    };
+    window.addEventListener('click', allowAudio);
+  }, []);
+
+  useEffect(() => {
+  const allowAudio = () => {
+    if (bellAudioRef.current) {
+      bellAudioRef.current.play().then(() => {
+        bellAudioRef.current.pause();
+        bellAudioRef.current.currentTime = 0;
+        setAudioAllowed(true);
+        console.log('🔊 브라우저가 오디오 허용함');
+      }).catch(e => {
+        console.warn('🔇 브라우저 오디오 허용 실패:', e.message);
+      });
+    }
+
+    window.removeEventListener('click', allowAudio);
+  };
+
+    window.addEventListener('click', allowAudio);
+  }, []);
 
   useEffect(() => {
     fetch(`/api/quiz/${quizId}`)
@@ -80,6 +150,8 @@ function SinglePlay() {
   }, [quizId, count]);
 
   useEffect(() => {
+    if (introVisible) return; // 🎯 intro일 때는 타이머 금지
+
     if (time === 't' && timer > 0) {
       timerRef.current = setInterval(() => {
         setTimer(prev => {
@@ -90,25 +162,55 @@ function SinglePlay() {
           return prev - 1;
         });
       }, 1000);
-  
-      return () => clearInterval(timerRef.current); // cleanup
+
+      return () => clearInterval(timerRef.current);
     }
-  }, [time, timer]);
+  }, [time, timer, introVisible]);
+
 
   useEffect(() => {
     if (currentQuestion?.type === 'sound') {
       setTimer(60);
     } else if (time === 't') {
-      setTimer(30);
+      setTimer(20);
     }
   }, [currentQuestion]);
-  
 
   useEffect(() => {
-    inputRef.current?.focus();
-  }, [currentIndex, message]);
+    if (time === 't' && currentQuestion?.type !== 'sound') {
+      if (timer === 10) {
+        wasCountdownPlaying.current = true;
+        playSound(countdown10);
+      } else if (timer < 10) {
+        wasCountdownPlaying.current = false;
+      }
+    }
+  }, [timer, currentQuestion]);
 
 
+  // 첫 문제 시작 시 bell 재생
+  useEffect(() => {
+    if (!introVisible && audioAllowed && currentQuestion && !hasPlayedBell.current) {
+      hasPlayedBell.current = true;
+      const bell = new Audio(bellSound);
+      bell.play().catch(e => console.warn('🔇 bell 재생 실패 (첫 문제):', e.message));
+    }
+  }, [introVisible, audioAllowed, currentQuestion]);
+
+  // 다음 문제마다 bell 재생
+  useEffect(() => {
+    if (!introVisible && audioAllowed && currentIndex > 0 && currentQuestion?.type !== 'sound') {
+      const bell = new Audio(bellSound);
+      bell.play().catch(e => console.warn('🔇 bell 재생 실패 (다음 문제):', e.message));
+    }
+  }, [currentIndex, audioAllowed, introVisible]);
+
+  const stopCountdownSound = () => {
+    if (countdownRef.current) {
+      countdownRef.current.pause();
+      countdownRef.current = null;
+    }
+  };
 
   const saveResultToDB = async (finalScore) => {
     await fetch('/api/quiz/result/save', {
@@ -129,6 +231,7 @@ function SinglePlay() {
   };
 
   const goToNext = async (finalScore = score) => {
+    stopCountdownSound();
     const nextIndex = currentIndex + 1;
     if (nextIndex >= questions.length) {
       await saveResultToDB(finalScore);
@@ -142,51 +245,63 @@ function SinglePlay() {
       setMessageType('');
       setMessageDetail('');
       setCurrentIndex(nextIndex);
+
+      // ✅ 입력창 자동 포커스
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
     }
   };
 
-  const handleSubmit = () => {
-    if (!currentQuestion) return;
-    const userAns = inputAnswer.trim().toLowerCase();
+const handleSubmit = () => {
+  const rawInput = inputAnswer.trim().toLowerCase();
 
-    if (userAns === '!힌트') {
-      handleHint();
-      setInputAnswer('');
-      return;
-    }
-    if (userAns === '!스킵') {
-      handleSkip();
-      setInputAnswer('');
-      return;
-    }
+  if (rawInput === '!힌트') {
+    if (currentQuestion) handleHint();
+    setInputAnswer('');
+    return;
+  }
+
+  if (rawInput === '!스킵') {
+    if (currentQuestion) handleSkip();
+    setInputAnswer('');
+    return;
+  }
+
+  if (message || !currentQuestion) return;
+
+  const answers = currentQuestion.answer.split('/').map(a => a.trim().toLowerCase());
+  const correct = answers.includes(rawInput);
+
+  if (correct) {
+    clearInterval(timerRef.current);
+    const updated = { solved: score.solved + 1, correct: score.correct + 1, wrong: score.wrong };
+    setScore(updated);
+    showMessage('정답!', 'correct');
+    setTimeout(() => goToNext(updated), 1500);
+  } else {
+    showMessage('오답!', 'wrong');
+    setInputAnswer('');
+  }
+};
 
 
 
-    const answers = currentQuestion.answer.split('/').map(a => a.trim().toLowerCase());
-    const correct = answers.includes(userAns);
-
-    if (correct) {
-      clearInterval(timerRef.current); // ✅ 타이머 멈춤
-      const updated = { solved: score.solved + 1, correct: score.correct + 1, wrong: score.wrong };
-      setScore(updated);
-      showMessage('정답!', 'correct');
-      setTimeout(() => goToNext(updated), 1500);
-    } else {
-      showMessage('오답!', 'wrong');
-      setInputAnswer('');
-    }
-  };
 
   const handleTimeout = () => {
+    stopCountdownSound();
     const updated = { solved: score.solved + 1, correct: score.correct, wrong: score.wrong + 1 };
     setScore(updated);
+    playSound(failSound);
     showMessage('시간 초과!', 'timeout', `정답: ${currentQuestion.answer.split('/')[0]}`);
     setTimeout(() => goToNext(updated), 2500);
   };
 
   const handleSkip = () => {
+    stopCountdownSound();
     const updated = { solved: score.solved + 1, correct: score.correct, wrong: score.wrong + 1 };
     setScore(updated);
+    playSound(failSound);
     showMessage('스킵!', 'skip', `정답: ${currentQuestion.answer.split('/')[0]}`);
     setTimeout(() => goToNext(updated), 2500);
   };
@@ -231,12 +346,20 @@ function SinglePlay() {
     setMessage(text);
     setMessageType(type);
     setMessageDetail(detail);
+
+    const delay = type === 'timeout' || type === 'skip' ? 3000 : 2000;
     setTimeout(() => {
       setMessage('');
       setMessageType('');
       setMessageDetail('');
-    }, type === 'timeout' || type === 'skip' ? 2500 : 1500);
+      // 메시지 사라진 후 포커싱
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
+    }, delay);
   };
+
+
 
   const getYoutubeSeconds = (timeStr) => {
     if (!timeStr) return 0;
@@ -283,7 +406,9 @@ function SinglePlay() {
     <div>{message}</div>
     {messageDetail && <div style={{ fontSize: '14px', color: 'black', marginTop: '8px' }}>{messageDetail}</div>}
   </>
-                ) : questions.length === 0 ? (
+                ) : introVisible ? (
+                  '🎬 잠시 후 퀴즈가 시작됩니다...'
+                ) : !currentQuestion ? (
                   '문제를 불러오는 중...'
                 ) : currentQuestion.type === 'sound' ? (
                   <>
@@ -304,7 +429,7 @@ function SinglePlay() {
                 ) : currentQuestion.type === 'image' ? (
                   <>
                     <img
-                      src={`http://localhost:5000${currentQuestion.media_url}`}
+                      src={`${API}${currentQuestion.media_url}`}
                       alt="문제 이미지"
                       style={{ maxWidth: '50%', maxHeight: '240px', marginBottom: '12px', borderRadius: '8px', objectFit: 'contain' }}
                     />
@@ -326,12 +451,12 @@ function SinglePlay() {
                 <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '12px', display: 'flex', alignItems: 'center' }}>
                   <input
                     ref={inputRef}
+                    autoFocus
                     type="text"
                     value={inputAnswer}
                     onChange={(e) => setInputAnswer(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
                     placeholder="정답 입력"
-                    disabled={!!message}
                     style={{ flex: 1, border: 'none', fontSize: '16px', padding: '8px' }}
                   />
                   <button
