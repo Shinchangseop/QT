@@ -6,12 +6,13 @@ const router = express.Router();
 
 // 이미지 저장 설정
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // 저장 경로
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
   },
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + '-' + file.originalname;
-    cb(null, uniqueName);
+  filename: function (req, file, cb) {
+    // 업로드 시간 + 원래 확장자만 유지
+    const ext = path.extname(file.originalname);
+    cb(null, Date.now() + ext); // 예: 1747197484652.png
   }
 });
 
