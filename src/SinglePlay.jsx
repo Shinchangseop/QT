@@ -36,6 +36,7 @@ function SinglePlay() {
   const API = import.meta.env.VITE_API_BASE_URL;
   const countdownRef = useRef(null);
   const bellAudioRef = useRef(new Audio(bellSound));
+  const [introVisible, setIntroVisible] = useState(true);
 
   const audioRef = useRef(null);
 
@@ -100,6 +101,19 @@ function SinglePlay() {
   // console.log('📦 현재 문제:', currentQuestion);
 
   const [audioAllowed, setAudioAllowed] = useState(false);
+
+  useEffect(() => {
+  // 문제 로드 완료 후에만 시작 가능
+  if (questions.length > 0) {
+    const timeout = setTimeout(() => {
+      setIntroVisible(false); // 퀴즈 시작!
+      playSound(bellSound);   // 첫 문제 진입 시 bell.mp3 재생
+    }, 3000); // 3초 후 시작
+
+    return () => clearTimeout(timeout);
+  }
+}, [questions]);
+
 
   useEffect(() => {
   const allowAudio = () => {
@@ -383,6 +397,8 @@ function SinglePlay() {
     <div>{message}</div>
     {messageDetail && <div style={{ fontSize: '14px', color: 'black', marginTop: '8px' }}>{messageDetail}</div>}
   </>
+                ) : introVisible ? (
+                  '🎬 잠시 후 퀴즈가 시작됩니다...'
                 ) : questions.length === 0 ? (
                   '문제를 불러오는 중...'
                 ) : currentQuestion.type === 'sound' ? (
