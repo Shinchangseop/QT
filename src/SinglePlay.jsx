@@ -179,11 +179,19 @@ function SinglePlay() {
   }, [timer, currentQuestion]);
 
   useEffect(() => {
-    if (!introVisible && currentIndex === 0 && currentQuestion?.type !== 'sound' && audioAllowed) {
-      bellAudioRef.current.currentTime = 0;
-      bellAudioRef.current.play().catch(e => console.warn('🔇 bell 재생 실패:', e.message));
+    if (
+      !introVisible &&
+      audioAllowed &&
+      currentQuestion &&
+      currentQuestion.type !== 'sound' &&
+      !message
+    ) {
+      const bell = new Audio(bellSound);
+      bell.currentTime = 0;
+      bell.play().catch(e => console.warn('🔇 bell 재생 실패:', e.message));
     }
-  }, [introVisible, currentIndex, currentQuestion, audioAllowed]);
+  }, [currentQuestion, audioAllowed, introVisible, message]);
+
 
 
   const stopCountdownSound = () => {
