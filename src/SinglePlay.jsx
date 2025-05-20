@@ -38,9 +38,8 @@ function SinglePlay() {
   const [introVisible, setIntroVisible] = useState(true);
   const [questionsLoaded, setQuestionsLoaded] = useState(false);
   const isCountdownRef = useRef(false);
-  const currentQuestion = questions[currentIndex];
-
-  const audioRef = useRef(null);
+  const currentQuestion = !introVisible ? questions[currentIndex] : null;
+  const bellAudioRef = useRef(new Audio(bellSound));
 
   const playSound = (file) => {
     const audio = new Audio(file);
@@ -171,19 +170,21 @@ function SinglePlay() {
   useEffect(() => {
     if (time === 't' && currentQuestion?.type !== 'sound') {
       if (timer === 10) {
-        isCountdownRef.current = true;
+        wasCountdownPlaying.current = true;
         playSound(countdown10);
       } else if (timer < 10) {
-        isCountdownRef.current = false;
+        wasCountdownPlaying.current = false;
       }
     }
   }, [timer, currentQuestion]);
 
   useEffect(() => {
     if (!introVisible && currentIndex === 0 && currentQuestion?.type !== 'sound' && audioAllowed) {
-      playSound(bellSound);
+      bellAudioRef.current.currentTime = 0;
+      bellAudioRef.current.play().catch(e => console.warn('🔇 bell 재생 실패:', e.message));
     }
   }, [introVisible, currentIndex, currentQuestion, audioAllowed]);
+
 
   const stopCountdownSound = () => {
     if (countdownRef.current) {
@@ -243,10 +244,10 @@ function SinglePlay() {
       showMessage('정답!', 'correct');
       setTimeout(() => goToNext(updated), 1500);
     } else {
-      if (!isCountdownRef.current) {
-        playSound(wrongSound); // ❗ 여기서만 조건 걸기
+      if (!wasCountdownPlaying.current) {
+        playSound(wrongSound);
       }
-      stopCountdownSound(); // ❗ 나중에 호출
+      stopCountdownSound();
       showMessage('오답!', 'wrong');
       setInputAnswer('');
     }
