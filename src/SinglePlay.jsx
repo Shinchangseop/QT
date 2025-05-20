@@ -40,6 +40,7 @@ function SinglePlay() {
   const currentQuestion = !introVisible ? questions[currentIndex] : null;
   const hasPlayedBell = useRef(false);
   const wasCountdownPlaying = useRef(false);
+  const bellAudioRef = useRef(null);
 
 
   const playSound = (file) => {
@@ -512,6 +513,7 @@ const handleSubmit = () => {
         )}
 
       </div>
+      <audio ref={bellAudioRef} src={bellSound} style={{ display: 'none' }} />
     </Layout>
   );
 
