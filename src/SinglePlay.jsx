@@ -237,10 +237,26 @@ function SinglePlay() {
       setMessageType('');
       setMessageDetail('');
       setCurrentIndex(nextIndex);
+
+        setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
     }
   };
 
   const handleSubmit = () => {
+    // ✅ 명령어 처리
+    if (rawInput === '!힌트') {
+      handleHint();
+      setInputAnswer('');
+      return;
+    }
+    if (rawInput === '!스킵') {
+      handleSkip();
+      setInputAnswer('');
+      return;
+    }
+
     if (!questions[currentIndex]) return;
     const userAns = inputAnswer.trim().toLowerCase();
 
