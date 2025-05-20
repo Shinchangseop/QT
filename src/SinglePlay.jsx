@@ -254,22 +254,21 @@ useEffect(() => {
   };
 
 const handleSubmit = () => {
+  if (message || !currentQuestion) return;  // 메시지 출력 중에는 제출 금지
+
   const rawInput = inputAnswer.trim().toLowerCase();
 
-  // 명령어 먼저 처리 (currentQuestion 없어도 작동하게)
   if (rawInput === '!힌트') {
-    if (currentQuestion) handleHint();
+    handleHint();
     setInputAnswer('');
     return;
   }
 
   if (rawInput === '!스킵') {
-    if (currentQuestion) handleSkip();
+    handleSkip();
     setInputAnswer('');
     return;
   }
-
-  if (!currentQuestion) return;
 
   const answers = currentQuestion.answer.split('/').map(a => a.trim().toLowerCase());
   const correct = answers.includes(rawInput);
@@ -285,6 +284,7 @@ const handleSubmit = () => {
     setInputAnswer('');
   }
 };
+
 
 
   const handleTimeout = () => {
@@ -351,13 +351,13 @@ const handleSubmit = () => {
       setMessage('');
       setMessageType('');
       setMessageDetail('');
-      
-      // 메시지 사라진 후 input 포커싱
+      // 메시지 사라진 후 포커싱
       setTimeout(() => {
         inputRef.current?.focus();
       }, 0);
     }, delay);
   };
+
 
 
   const getYoutubeSeconds = (timeStr) => {
@@ -455,7 +455,6 @@ const handleSubmit = () => {
                     onChange={(e) => setInputAnswer(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
                     placeholder="정답 입력"
-                    disabled={!!message}
                     style={{ flex: 1, border: 'none', fontSize: '16px', padding: '8px' }}
                   />
                   <button
