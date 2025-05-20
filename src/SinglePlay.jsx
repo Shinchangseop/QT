@@ -256,15 +256,16 @@ useEffect(() => {
 const handleSubmit = () => {
   const rawInput = inputAnswer.trim().toLowerCase();
 
+  // 입력창 초기화는 무조건 실행
+  setInputAnswer('');
+
   if (rawInput === '!힌트') {
     if (currentQuestion) handleHint();
-    setInputAnswer('');
     return;
   }
 
   if (rawInput === '!스킵') {
     if (currentQuestion) handleSkip();
-    setInputAnswer('');
     return;
   }
 
@@ -275,18 +276,16 @@ const handleSubmit = () => {
 
   if (correct) {
     clearInterval(timerRef.current);
+    playSound(successSound); // ✅ 정답 효과음
     const updated = { solved: score.solved + 1, correct: score.correct + 1, wrong: score.wrong };
     setScore(updated);
     showMessage('정답!', 'correct');
     setTimeout(() => goToNext(updated), 1500);
   } else {
+    playSound(wrongSound); // ✅ 오답 효과음
     showMessage('오답!', 'wrong');
-    setInputAnswer('');
   }
 };
-
-
-
 
   const handleTimeout = () => {
     stopCountdownSound();
@@ -516,9 +515,7 @@ const handleSubmit = () => {
     </Layout>
   );
 
-
 }
-
 
 
 export default SinglePlay;
