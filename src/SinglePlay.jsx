@@ -35,30 +35,34 @@ function SinglePlay() {
   const [startTime, setStartTime] = useState(0);
   const API = import.meta.env.VITE_API_BASE_URL;
   const countdownRef = useRef(null);
+  const bellAudioRef = useRef(new Audio(bellSound));
 
   const audioRef = useRef(null);
 
   const playSound = (audioFile) => {
-    // 기존 오디오가 재생 중이면 중단
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
     }
 
-    const audio = new Audio(audioFile);
+    let audio;
+    if (audioFile === bellSound && bellAudioRef.current) {
+      audio = bellAudioRef.current;
+    } else {
+      audio = new Audio(audioFile);
+    }
+
     audioRef.current = audio;
-
     audio.load();
+    audio.currentTime = 0;
 
-    audio
-      .play()
-      .then(() => {
-        console.log('🔊 재생 성공:', audioFile);
-      })
-      .catch((err) => {
-        console.warn('🔇 자동 재생 실패:', err.message);
-      });
+    audio.play().then(() => {
+      console.log('🔊 재생 성공:', audioFile);
+    }).catch(err => {
+      console.warn('🔇 자동 재생 실패:', err.message);
+    });
   };
+
 
   const replaySound = () => {
     if (player && typeof startTime === 'number') {
@@ -96,6 +100,25 @@ function SinglePlay() {
   // console.log('📦 현재 문제:', currentQuestion);
 
   const [audioAllowed, setAudioAllowed] = useState(false);
+
+  useEffect(() => {
+  const allowAudio = () => {
+    if (bellAudioRef.current) {
+      bellAudioRef.current.play().then(() => {
+        bellAudioRef.current.pause();
+        bellAudioRef.current.currentTime = 0;
+        setAudioAllowed(true);
+        console.log('🔊 브라우저가 오디오 허용함');
+      }).catch(e => {
+        console.warn('🔇 브라우저 오디오 허용 실패:', e.message);
+      });
+    }
+
+    window.removeEventListener('click', allowAudio);
+  };
+
+    window.addEventListener('click', allowAudio);
+  }, []);
 
   useEffect(() => {
     const allowAudio = () => {
