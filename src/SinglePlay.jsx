@@ -43,10 +43,11 @@ function SinglePlay() {
   const bellAudioRef = useRef(null);
 
 
-  const playSound = (file) => {
-    const audio = new Audio(file);
-    audio.play().catch((e) => console.warn('🔇 사운드 재생 실패:', e.message));
-  };
+const playSound = (file, ref = null) => {
+  const audio = new Audio(file);
+  if (ref) ref.current = audio;
+  audio.play().catch((e) => console.warn('🔇 사운드 재생 실패:', e.message));
+};
 
 
   const replaySound = () => {
@@ -181,7 +182,7 @@ useEffect(() => {
     if (time === 't' && currentQuestion?.type !== 'sound') {
       if (timer === 10) {
         wasCountdownPlaying.current = true;
-        playSound(countdown10);
+        playSound(countdown10, countdownRef);
       } else if (timer < 10) {
         wasCountdownPlaying.current = false;
       }
@@ -276,13 +277,14 @@ const handleSubmit = () => {
   const correct = answers.includes(rawInput);
 
   if (correct) {
-    clearInterval(timerRef.current);
-    playSound(successSound); // ✅ 정답 효과음
-    const updated = { solved: score.solved + 1, correct: score.correct + 1, wrong: score.wrong };
-    setScore(updated);
-    showMessage('정답!', 'correct');
-    setTimeout(() => goToNext(updated), 1500);
-  } else {
+  stopCountdownSound(); // ✅ 이 줄 추가
+  clearInterval(timerRef.current);
+  playSound(successSound); // ✅ 정답 효과음
+  const updated = { solved: score.solved + 1, correct: score.correct + 1, wrong: score.wrong };
+  setScore(updated);
+  showMessage('정답!', 'correct');
+  setTimeout(() => goToNext(updated), 1500);
+  }  else {
     playSound(wrongSound); // ✅ 오답 효과음
     showMessage('오답!', 'wrong');
   }

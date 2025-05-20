@@ -28,14 +28,29 @@ function Join() {
     setSelectedQuizId(quizId);
   };
 ``
-  const dummyRooms = Array.from({ length: 12 }, (_, i) => ({
-    id: i + 1,
-    title: '방제목',
-    quizTitle: '퀴즈 제목',
-    quizType: '퀴즈 타입',
-    participants: 1,
-    maxParticipants: 8
-  }));
+  const dummyRooms = [
+  {
+    id: 1,
+    title: '같이 퀴즈 할 사람',
+    quizTitle: '넌센스 퀴즈',
+    participants: 3,
+    maxParticipants: 8,
+    showContent: true
+  },
+  {
+    id: 2,
+    title: '게임 퀴즈 스겜 ㄱㄱ',
+    quizTitle: '게임 음악 퀴즈',
+    participants: 5,
+    maxParticipants: 8,
+    showContent: true
+  },
+  ...Array.from({ length: 10 }, (_, i) => ({
+    id: i + 3,
+    showContent: false
+  }))
+];
+
 
   const navigate = useNavigate();
 
@@ -97,35 +112,39 @@ function Join() {
               padding: '14px 24px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between',
+              justifyContent: room.showContent ? 'space-between' : 'center',
               boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
               minHeight: '68px',
               width: '100%',
               maxWidth: '480px'
             }}>
-              <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-                <div style={{
-                  width: '60px',
-                  height: '60px',
-                  borderRadius: '12px',
-                  backgroundColor: '#ccc'
-                }} />
-                <div>
-                  <div style={{ fontWeight: 'bold', fontSize: '15px' }}>{room.title}</div>
-                  <div style={{ fontSize: '14px' }}>{room.quizTitle}</div>
-                  <div style={{ fontSize: '13px' }}>{room.quizType}</div>
-                </div>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
-                  {room.participants}/{room.maxParticipants}
-                </div>
-                <button className="btn-red" style={{ marginTop: '6px' }}>
-                  입장
-                </button>
-              </div>
+              {room.showContent ? (
+                <>
+                  <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                    <div style={{
+                      width: '60px',
+                      height: '60px',
+                      borderRadius: '12px',
+                      backgroundColor: '#ccc'
+                    }} />
+                    <div>
+                      <div style={{ fontWeight: 'bold', fontSize: '15px' }}>{room.title}</div>
+                      <div style={{ fontSize: '14px' }}>{room.quizTitle}</div>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
+                      {room.participants}/{room.maxParticipants}
+                    </div>
+                    <button className="btn-red" style={{ marginTop: '6px' }}>
+                      입장
+                    </button>
+                  </div>
+                </>
+              ) : null}
             </div>
           ))}
+
         </div>
 
         {/* 페이지닷 & 검색창 */}
@@ -142,7 +161,7 @@ function Join() {
             fontSize: '24px',
             cursor: 'pointer'
           }}>{'<'}</button>
-          <span style={{ fontSize: '16px' }}>1/8</span>
+          <span style={{ fontSize: '16px' }}>1/1</span>
           <button style={{
             background: 'none',
             border: 'none',
