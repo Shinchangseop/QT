@@ -161,6 +161,8 @@ function SinglePlay() {
   }, [quizId, count]);
 
   useEffect(() => {
+    if (introVisible) return; // 🎯 intro일 때는 타이머 금지
+
     if (time === 't' && timer > 0) {
       timerRef.current = setInterval(() => {
         setTimer(prev => {
@@ -171,10 +173,11 @@ function SinglePlay() {
           return prev - 1;
         });
       }, 1000);
-  
-      return () => clearInterval(timerRef.current); // cleanup
+
+      return () => clearInterval(timerRef.current);
     }
-  }, [time, timer]);
+  }, [time, timer, introVisible]);
+
 
   useEffect(() => {
     if (currentQuestion?.type === 'sound') {
@@ -186,20 +189,23 @@ function SinglePlay() {
   
 
   useEffect(() => {
-    inputRef.current?.focus();
-  }, [currentIndex, message]);
+    if (!introVisible) {
+      inputRef.current?.focus();
+    }
+  }, [currentIndex, message, introVisible]);
 
   useEffect(() => {
+    if (introVisible) return;
     if (questions.length > 0 && currentQuestion && currentQuestion.type !== 'sound') {
       if (currentIndex === 0) {
         setTimeout(() => {
           playSound(bellSound);
-        }, 300); // 🎯 첫 문제는 약간 지연
+        }, 300);
       } else {
         playSound(bellSound);
       }
     }
-  }, [currentIndex]);
+  }, [currentIndex, introVisible]);
 
   useEffect(() => {
     if (time === 't' && currentQuestion?.type !== 'sound') {
