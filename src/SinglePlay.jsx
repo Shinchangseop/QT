@@ -7,7 +7,7 @@ import YouTube from 'react-youtube';
 
 import bellSound from './assets/sound/bell.mp3';
 import countdown10 from './assets/sound/countdown10.wav';
-import failSound from './assets/sound/FAIL.mp3';
+import failSound from './assets/sound/FAIL.MP3';
 import successSound from './assets/sound/SUCCESS.mp3';
 import wrongSound from './assets/sound/SCORE_ALARM.mp3';
 
