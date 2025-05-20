@@ -72,6 +72,7 @@ router.post('/discord-login', async (req, res) => {
 
 
 router.post('/kakao-login', async (req, res) => {
+  console.log('[카카오 로그인 요청] req.body:', req.body); // ✅ 여기에 찍기
   const { nickname } = req.body;
 
   try {
