@@ -39,6 +39,7 @@ function SinglePlay() {
   const [introVisible, setIntroVisible] = useState(true);
   const [questionsLoaded, setQuestionsLoaded] = useState(false);
   const isCountdownPlaying = timer === 10;
+  const isCountdownRef = useRef(false);
 
   const audioRef = useRef(null);
 
@@ -131,15 +132,6 @@ function SinglePlay() {
   }, []);
 
   useEffect(() => {
-    const allowAudio = () => {
-      setAudioAllowed(true);
-      window.removeEventListener('click', allowAudio); // 한 번만 실행
-    };
-
-    window.addEventListener('click', allowAudio);
-  }, []);
-
-  useEffect(() => {
     fetch(`/api/quiz/${quizId}`)
       .then(res => res.json())
       .then(data => setQuizTitle(data.title));
@@ -179,7 +171,7 @@ function SinglePlay() {
     if (currentQuestion?.type === 'sound') {
       setTimer(60);
     } else if (time === 't') {
-      setTimer(30);
+      setTimer(20);
     }
   }, [currentQuestion]);
   
@@ -193,22 +185,26 @@ function SinglePlay() {
   useEffect(() => {
     if (time === 't' && currentQuestion?.type !== 'sound') {
       if (timer === 10) {
-        playSound(countdown10, countdownRef); // ref를 통해 추적
+        isCountdownRef.current = true;
+        playSound(countdown10);
+      } else if (timer < 10) {
+        isCountdownRef.current = false;
       }
     }
   }, [timer, currentQuestion]);
 
   useEffect(() => {
-    if (!introVisible && currentIndex === 0 && currentQuestion?.type !== 'sound') {
+    if (!introVisible && currentIndex === 0 && currentQuestion?.type !== 'sound' && audioAllowed) {
       playSound(bellSound);
     }
-  }, [introVisible]);
+  }, [introVisible, currentIndex, currentQuestion, audioAllowed]);
 
   const stopCountdownSound = () => {
     if (countdownRef.current) {
       countdownRef.current.pause();
       countdownRef.current = null;
     }
+    isCountdownRef.current = false;
   };
 
   const saveResultToDB = async (finalScore) => {
@@ -267,16 +263,17 @@ function SinglePlay() {
     const answers = currentQuestion.answer.split('/').map(a => a.trim().toLowerCase());
     const correct = answers.includes(userAns);
     stopCountdownSound();
-
+    
     if (correct) {
-      clearInterval(timerRef.current); // ✅ 타이머 멈춤
+      clearInterval(timerRef.current);
       const updated = { solved: score.solved + 1, correct: score.correct + 1, wrong: score.wrong };
       setScore(updated);
       playSound(successSound);
       showMessage('정답!', 'correct');
       setTimeout(() => goToNext(updated), 1500);
     } else {
-      if (!isCountdownPlaying) {
+      stopCountdownSound(); // 위치 이동
+      if (!isCountdownRef.current) {
         playSound(wrongSound);
       }
       showMessage('오답!', 'wrong');
@@ -396,7 +393,7 @@ function SinglePlay() {
   </>
                 ) : introVisible ? (
                   '🎬 잠시 후 퀴즈가 시작됩니다...'
-                ) : questions.length === 0 ? (
+                ) : !currentQuestion ? (
                   '문제를 불러오는 중...'
                 ) : currentQuestion.type === 'sound' ? (
                   <>
