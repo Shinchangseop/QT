@@ -97,7 +97,9 @@ function SinglePlay() {
     return match ? match[1] : '';
   };
 
-  const currentQuestion = questions.length > 0 && currentIndex < questions.length ? questions[currentIndex] : null;
+  const currentQuestion = !introVisible && questions.length > 0 && currentIndex < questions.length
+    ? questions[currentIndex]
+    : null;
   // console.log('📦 현재 문제:', currentQuestion);
 
   const [audioAllowed, setAudioAllowed] = useState(false);
