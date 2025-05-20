@@ -37,30 +37,22 @@ function SinglePlay() {
   const countdownRef = useRef(null);
   const bellAudioRef = useRef(new Audio(bellSound));
   const [introVisible, setIntroVisible] = useState(true);
+  const [questionsLoaded, setQuestionsLoaded] = useState(false);
+  const isCountdownPlaying = timer === 10;
 
   const audioRef = useRef(null);
 
   const playSound = (audioFile) => {
     if (audioRef.current) {
       audioRef.current.pause();
-      audioRef.current = null;
+      audioRef.current.currentTime = 0;
     }
 
-    let audio;
-    if (audioFile === bellSound && bellAudioRef.current) {
-      audio = bellAudioRef.current;
-    } else {
-      audio = new Audio(audioFile);
-    }
-
+    const audio = new Audio(audioFile);
     audioRef.current = audio;
     audio.load();
-    audio.currentTime = 0;
-
-    audio.play().then(() => {
-      console.log('🔊 재생 성공:', audioFile);
-    }).catch(err => {
-      console.warn('🔇 자동 재생 실패:', err.message);
+    audio.play().catch(err => {
+      console.warn('❌ 재생 실패:', err.message);
     });
   };
 
@@ -97,7 +89,7 @@ function SinglePlay() {
     return match ? match[1] : '';
   };
 
-  const currentQuestion = !introVisible && questions.length > 0 && currentIndex < questions.length
+  const currentQuestion = questionsLoaded && !introVisible && currentIndex < questions.length
     ? questions[currentIndex]
     : null;
   // console.log('📦 현재 문제:', currentQuestion);
@@ -105,14 +97,19 @@ function SinglePlay() {
   const [audioAllowed, setAudioAllowed] = useState(false);
 
   useEffect(() => {
-    if (questions.length > 0) {
-      const timeout = setTimeout(() => {
-        setIntroVisible(false); // ✅ 오직 화면 전환만!
-      }, 3000);
-      return () => clearTimeout(timeout);
+    if (questions.length > 0 && !questionsLoaded) {
+      setQuestionsLoaded(true);
     }
   }, [questions]);
 
+  useEffect(() => {
+    if (questionsLoaded) {
+      const introDelay = setTimeout(() => {
+        setIntroVisible(false);
+      }, 3000);
+      return () => clearTimeout(introDelay);
+    }
+  }, [questionsLoaded]);
 
   useEffect(() => {
   const allowAudio = () => {
@@ -194,19 +191,6 @@ function SinglePlay() {
   }, [currentIndex, message, introVisible]);
 
   useEffect(() => {
-    if (introVisible) return;
-    if (questions.length > 0 && currentQuestion && currentQuestion.type !== 'sound') {
-      if (currentIndex === 0) {
-        setTimeout(() => {
-          playSound(bellSound);
-        }, 300);
-      } else {
-        playSound(bellSound);
-      }
-    }
-  }, [currentIndex, introVisible]);
-
-  useEffect(() => {
     if (time === 't' && currentQuestion?.type !== 'sound') {
       if (timer === 10) {
         playSound(countdown10, countdownRef); // ref를 통해 추적
@@ -214,16 +198,11 @@ function SinglePlay() {
     }
   }, [timer, currentQuestion]);
 
-useEffect(() => {
-  if (!introVisible && currentIndex === 0 && questions.length > 0) {
-    // ✅ 화면이 완전히 intro에서 벗어나고 렌더링 완료된 후 재생
-    const bellTimeout = setTimeout(() => {
+  useEffect(() => {
+    if (!introVisible && currentIndex === 0 && currentQuestion?.type !== 'sound') {
       playSound(bellSound);
-    }, 200); // 렌더링 완료 후 소리 재생을 살짝 지연 (200~300ms 안정적)
-
-    return () => clearTimeout(bellTimeout);
-  }
-}, [introVisible]);
+    }
+  }, [introVisible]);
 
   const stopCountdownSound = () => {
     if (countdownRef.current) {
@@ -297,7 +276,9 @@ useEffect(() => {
       showMessage('정답!', 'correct');
       setTimeout(() => goToNext(updated), 1500);
     } else {
-      playSound(wrongSound);
+      if (!isCountdownPlaying) {
+        playSound(wrongSound);
+      }
       showMessage('오답!', 'wrong');
       setInputAnswer('');
     }
