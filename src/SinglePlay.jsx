@@ -153,10 +153,16 @@ function SinglePlay() {
   }, [currentIndex, message]);
 
   useEffect(() => {
-    if (audioAllowed && questions.length > 0 && currentQuestion && currentQuestion.type !== 'sound') {
-      playSound(bellSound);
+    if (questions.length > 0 && currentQuestion && currentQuestion.type !== 'sound') {
+      if (currentIndex === 0) {
+        setTimeout(() => {
+          playSound(bellSound);
+        }, 300); // 🎯 첫 문제는 약간 지연
+      } else {
+        playSound(bellSound);
+      }
     }
-  }, [currentIndex, audioAllowed]);
+  }, [currentIndex]);
 
   useEffect(() => {
     if (time === 't' && currentQuestion?.type !== 'sound') {
