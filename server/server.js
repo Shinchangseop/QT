@@ -9,8 +9,10 @@ const uploadRoutes = require('./uploadRoutes');
 const authRoutes = require('./authRoutes');
 
 app.use(cors());
-app.use(express.json());
-app.use('/uploads', express.static('uploads')); // 이미지 접근 가능하게 설정
+
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 app.use('/api/quiz', quizRoutes);
 app.use('/api/question', questionRoutes);

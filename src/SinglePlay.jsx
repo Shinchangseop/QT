@@ -12,6 +12,7 @@ import successSound from './assets/sound/SUCCESS.mp3';
 import wrongSound from './assets/sound/SCORE_ALARM.mp3';
 
 
+
 function SinglePlay() {
   const { quizId, count, time, hint } = useParams();
   const [quizTitle, setQuizTitle] = useState('');
@@ -33,14 +34,17 @@ function SinglePlay() {
   const [player, setPlayer] = useState(null);
   const [startTime, setStartTime] = useState(0);
   const API = import.meta.env.VITE_API_BASE_URL;
+  const countdownRef = useRef(null);
 
-  const playSound = (audioFile) => {
-  const audio = new Audio(audioFile);
-  audio.load();
-  audio.play().catch(e => {
-    console.warn('🔇 자동 재생 실패:', e);
-  });
-};
+  const playSound = (audioFile, ref = null) => {
+    const audio = new Audio(audioFile);
+    if (ref) ref.current = audio;
+    audio.load();
+    audio.play().catch(e => {
+      console.warn('🔇 자동 재생 실패:', e);
+    });
+  };
+
 
   const replaySound = () => {
     if (player && typeof startTime === 'number') {
@@ -132,12 +136,17 @@ function SinglePlay() {
   useEffect(() => {
     if (time === 't' && currentQuestion?.type !== 'sound') {
       if (timer === 10) {
-        playSound(countdown10);
+        playSound(countdown10, countdownRef); // ref를 통해 추적
       }
     }
   }, [timer, currentQuestion]);
 
-
+  const stopCountdownSound = () => {
+    if (countdownRef.current) {
+      countdownRef.current.pause();
+      countdownRef.current = null;
+    }
+  };
 
   const saveResultToDB = async (finalScore) => {
     await fetch('/api/quiz/result/save', {
@@ -158,6 +167,7 @@ function SinglePlay() {
   };
 
   const goToNext = async (finalScore = score) => {
+    stopCountdownSound();
     const nextIndex = currentIndex + 1;
     if (nextIndex >= questions.length) {
       await saveResultToDB(finalScore);
@@ -193,6 +203,7 @@ function SinglePlay() {
 
     const answers = currentQuestion.answer.split('/').map(a => a.trim().toLowerCase());
     const correct = answers.includes(userAns);
+    stopCountdownSound();
 
     if (correct) {
       clearInterval(timerRef.current); // ✅ 타이머 멈춤
@@ -209,6 +220,7 @@ function SinglePlay() {
   };
 
   const handleTimeout = () => {
+    stopCountdownSound();
     const updated = { solved: score.solved + 1, correct: score.correct, wrong: score.wrong + 1 };
     setScore(updated);
     playSound(failSound);
@@ -217,6 +229,7 @@ function SinglePlay() {
   };
 
   const handleSkip = () => {
+    stopCountdownSound();
     const updated = { solved: score.solved + 1, correct: score.correct, wrong: score.wrong + 1 };
     setScore(updated);
     playSound(failSound);
@@ -268,7 +281,7 @@ function SinglePlay() {
       setMessage('');
       setMessageType('');
       setMessageDetail('');
-    }, type === 'timeout' || type === 'skip' ? 2500 : 1500);
+    }, type === 'timeout' || type === 'skip' ? 3000 : 2000);
   };
 
   const getYoutubeSeconds = (timeStr) => {
@@ -360,7 +373,6 @@ function SinglePlay() {
                   <input
                     ref={inputRef}
                     type="text"
-                    onFocus={() => playSound(bellSound)} 
                     value={inputAnswer}
                     onChange={(e) => setInputAnswer(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
