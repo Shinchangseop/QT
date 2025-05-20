@@ -37,9 +37,10 @@ function SinglePlay() {
   const countdownRef = useRef(null);
   const [introVisible, setIntroVisible] = useState(true);
   const [questionsLoaded, setQuestionsLoaded] = useState(false);
-  const isCountdownRef = useRef(false);
   const currentQuestion = !introVisible ? questions[currentIndex] : null;
-  const bellAudioRef = useRef(new Audio(bellSound));
+  const hasPlayedBell = useRef(false);
+  const wasCountdownPlaying = useRef(false);
+
 
   const playSound = (file) => {
     const audio = new Audio(file);
@@ -178,21 +179,23 @@ function SinglePlay() {
     }
   }, [timer, currentQuestion]);
 
+
+  // 첫 문제 시작 시 bell 재생
   useEffect(() => {
-    if (
-      !introVisible &&
-      audioAllowed &&
-      currentQuestion &&
-      currentQuestion.type !== 'sound' &&
-      !message
-    ) {
+    if (!introVisible && audioAllowed && currentQuestion && !hasPlayedBell.current) {
+      hasPlayedBell.current = true;
       const bell = new Audio(bellSound);
-      bell.currentTime = 0;
-      bell.play().catch(e => console.warn('🔇 bell 재생 실패:', e.message));
+      bell.play().catch(e => console.warn('🔇 bell 재생 실패 (첫 문제):', e.message));
     }
-  }, [currentQuestion, audioAllowed, introVisible, message]);
+  }, [introVisible, audioAllowed, currentQuestion]);
 
-
+  // 다음 문제마다 bell 재생
+  useEffect(() => {
+    if (!introVisible && audioAllowed && currentIndex > 0 && currentQuestion?.type !== 'sound') {
+      const bell = new Audio(bellSound);
+      bell.play().catch(e => console.warn('🔇 bell 재생 실패 (다음 문제):', e.message));
+    }
+  }, [currentIndex, audioAllowed, introVisible]);
 
   const stopCountdownSound = () => {
     if (countdownRef.current) {
