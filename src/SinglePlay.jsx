@@ -5,6 +5,12 @@ import './App.css';
 import ReactPlayer from 'react-player';
 import YouTube from 'react-youtube';
 
+import bellSound from './assets/sound/bell.mp3';
+import countdown10 from './assets/sound/countdown10.wav';
+import failSound from './assets/sound/FAIL.mp3';
+import successSound from './assets/sound/SUCCESS.mp3';
+import wrongSound from './assets/sound/SCORE_ALARM.mp3';
+
 
 function SinglePlay() {
   const { quizId, count, time, hint } = useParams();
@@ -27,6 +33,11 @@ function SinglePlay() {
   const [player, setPlayer] = useState(null);
   const [startTime, setStartTime] = useState(0);
   const API = import.meta.env.VITE_API_BASE_URL;
+
+  const playSound = (audioFile) => {
+  const audio = new Audio(audioFile);
+  audio.play();
+  };
 
   const replaySound = () => {
     if (player && typeof startTime === 'number') {
@@ -109,6 +120,18 @@ function SinglePlay() {
     inputRef.current?.focus();
   }, [currentIndex, message]);
 
+  useEffect(() => {
+  if (questions.length > 0 && currentQuestion && currentQuestion.type !== 'sound') {
+    playSound(bellSound);
+  }
+}, [currentIndex]);
+
+useEffect(() => {
+  if (time === 't' && timer === 10 && currentQuestion?.type !== 'sound') {
+    playSound(countdown10);
+  }
+}, [timer]);
+
 
 
   const saveResultToDB = async (finalScore) => {
@@ -170,9 +193,11 @@ function SinglePlay() {
       clearInterval(timerRef.current); // ✅ 타이머 멈춤
       const updated = { solved: score.solved + 1, correct: score.correct + 1, wrong: score.wrong };
       setScore(updated);
+      playSound(successSound);
       showMessage('정답!', 'correct');
       setTimeout(() => goToNext(updated), 1500);
     } else {
+      playSound(wrongSound);
       showMessage('오답!', 'wrong');
       setInputAnswer('');
     }
@@ -181,6 +206,7 @@ function SinglePlay() {
   const handleTimeout = () => {
     const updated = { solved: score.solved + 1, correct: score.correct, wrong: score.wrong + 1 };
     setScore(updated);
+    playSound(failSound);
     showMessage('시간 초과!', 'timeout', `정답: ${currentQuestion.answer.split('/')[0]}`);
     setTimeout(() => goToNext(updated), 2500);
   };
@@ -188,6 +214,7 @@ function SinglePlay() {
   const handleSkip = () => {
     const updated = { solved: score.solved + 1, correct: score.correct, wrong: score.wrong + 1 };
     setScore(updated);
+    playSound(failSound);
     showMessage('스킵!', 'skip', `정답: ${currentQuestion.answer.split('/')[0]}`);
     setTimeout(() => goToNext(updated), 2500);
   };
