@@ -72,8 +72,17 @@ router.post('/discord-login', async (req, res) => {
 
 
 router.post('/kakao-login', async (req, res) => {
-  console.log('[카카오 로그인 요청] req.body:', req.body); // ✅ 여기에 찍기
+  console.log('[카카오 로그인 요청] req.body:', req.body); // 확인용 로그
+
+  if (!req.body) {
+    return res.status(400).json({ error: '요청에 body가 없습니다.' });
+  }
+
   const { nickname } = req.body;
+
+  if (!nickname) {
+    return res.status(400).json({ error: 'nickname이 없습니다.' });
+  }
 
   try {
     const userCheck = await client.query(
