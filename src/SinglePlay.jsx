@@ -81,6 +81,17 @@ function SinglePlay() {
   const currentQuestion = questions.length > 0 && currentIndex < questions.length ? questions[currentIndex] : null;
   // console.log('📦 현재 문제:', currentQuestion);
 
+  const [audioAllowed, setAudioAllowed] = useState(false);
+
+  useEffect(() => {
+    const allowAudio = () => {
+      setAudioAllowed(true);
+      window.removeEventListener('click', allowAudio); // 한 번만 실행
+    };
+
+    window.addEventListener('click', allowAudio);
+  }, []);
+
   useEffect(() => {
     fetch(`/api/quiz/${quizId}`)
       .then(res => res.json())
@@ -128,10 +139,10 @@ function SinglePlay() {
   }, [currentIndex, message]);
 
   useEffect(() => {
-  if (questions.length > 0 && currentQuestion && currentQuestion.type !== 'sound') {
-    playSound(bellSound);
-  }
-}, [currentIndex]);
+    if (audioAllowed && questions.length > 0 && currentQuestion && currentQuestion.type !== 'sound') {
+      playSound(bellSound);
+    }
+  }, [currentIndex, audioAllowed]);
 
   useEffect(() => {
     if (time === 't' && currentQuestion?.type !== 'sound') {
