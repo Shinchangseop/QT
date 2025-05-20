@@ -36,8 +36,11 @@ function SinglePlay() {
 
   const playSound = (audioFile) => {
   const audio = new Audio(audioFile);
-  audio.play();
-  };
+  audio.load();
+  audio.play().catch(e => {
+    console.warn('🔇 자동 재생 실패:', e);
+  });
+};
 
   const replaySound = () => {
     if (player && typeof startTime === 'number') {
@@ -126,11 +129,13 @@ function SinglePlay() {
   }
 }, [currentIndex]);
 
-useEffect(() => {
-  if (time === 't' && timer === 10 && currentQuestion?.type !== 'sound') {
-    playSound(countdown10);
-  }
-}, [timer]);
+  useEffect(() => {
+    if (time === 't' && currentQuestion?.type !== 'sound') {
+      if (timer === 10) {
+        playSound(countdown10);
+      }
+    }
+  }, [timer, currentQuestion]);
 
 
 
