@@ -256,20 +256,19 @@ useEffect(() => {
 const handleSubmit = () => {
   const rawInput = inputAnswer.trim().toLowerCase();
 
-  // 명령어 먼저 처리
+  // 명령어 먼저 처리 (currentQuestion 없어도 작동하게)
   if (rawInput === '!힌트') {
-    handleHint();
+    if (currentQuestion) handleHint();
     setInputAnswer('');
     return;
   }
 
   if (rawInput === '!스킵') {
-    handleSkip();
+    if (currentQuestion) handleSkip();
     setInputAnswer('');
     return;
   }
 
-  // 이후에 currentQuestion 체크
   if (!currentQuestion) return;
 
   const answers = currentQuestion.answer.split('/').map(a => a.trim().toLowerCase());
@@ -286,9 +285,6 @@ const handleSubmit = () => {
     setInputAnswer('');
   }
 };
-
-
-
 
 
   const handleTimeout = () => {
@@ -349,12 +345,20 @@ const handleSubmit = () => {
     setMessage(text);
     setMessageType(type);
     setMessageDetail(detail);
+
+    const delay = type === 'timeout' || type === 'skip' ? 3000 : 2000;
     setTimeout(() => {
       setMessage('');
       setMessageType('');
       setMessageDetail('');
-    }, type === 'timeout' || type === 'skip' ? 3000 : 2000);
+      
+      // 메시지 사라진 후 input 포커싱
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
+    }, delay);
   };
+
 
   const getYoutubeSeconds = (timeStr) => {
     if (!timeStr) return 0;
@@ -446,7 +450,6 @@ const handleSubmit = () => {
                 <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '12px', display: 'flex', alignItems: 'center' }}>
                   <input
                     ref={inputRef}
-                    autoFocus
                     type="text"
                     value={inputAnswer}
                     onChange={(e) => setInputAnswer(e.target.value)}
