@@ -82,6 +82,14 @@ function SinglePlay() {
 
   const [audioAllowed, setAudioAllowed] = useState(false);
 
+useEffect(() => {
+  if (!message) {
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);  // 렌더링 직후에 포커스 보장
+  }
+}, [message]);
+
   useEffect(() => {
     if (questions.length > 0 && !questionsLoaded) {
       setQuestionsLoaded(true);
@@ -238,47 +246,49 @@ function SinglePlay() {
       setMessageDetail('');
       setCurrentIndex(nextIndex);
 
-        setTimeout(() => {
-      inputRef.current?.focus();
-    }, 100);
+      // ✅ 입력창 자동 포커스
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
     }
   };
 
-  const handleSubmit = () => {
-    // ✅ 명령어 처리
-    if (rawInput === '!힌트') {
-      handleHint();
-      setInputAnswer('');
-      return;
-    }
-    if (rawInput === '!스킵') {
-      handleSkip();
-      setInputAnswer('');
-      return;
-    }
+const handleSubmit = () => {
+  const rawInput = inputAnswer.trim().toLowerCase();
 
-    if (!questions[currentIndex]) return;
-    const userAns = inputAnswer.trim().toLowerCase();
+  // 명령어 먼저 처리
+  if (rawInput === '!힌트') {
+    handleHint();
+    setInputAnswer('');
+    return;
+  }
 
-    const answers = questions[currentIndex].answer.split('/').map(a => a.trim().toLowerCase());
-    const correct = answers.includes(userAns);
+  if (rawInput === '!스킵') {
+    handleSkip();
+    setInputAnswer('');
+    return;
+  }
 
-    if (correct) {
-      clearInterval(timerRef.current);
-      const updated = { solved: score.solved + 1, correct: score.correct + 1, wrong: score.wrong };
-      setScore(updated);
-      playSound(successSound);
-      showMessage('정답!', 'correct');
-      setTimeout(() => goToNext(updated), 1500);
-    } else {
-      if (!wasCountdownPlaying.current) {
-        playSound(wrongSound);
-      }
-      stopCountdownSound();
-      showMessage('오답!', 'wrong');
-      setInputAnswer('');
-    }
-  };
+  // 이후에 currentQuestion 체크
+  if (!currentQuestion) return;
+
+  const answers = currentQuestion.answer.split('/').map(a => a.trim().toLowerCase());
+  const correct = answers.includes(rawInput);
+
+  if (correct) {
+    clearInterval(timerRef.current);
+    const updated = { solved: score.solved + 1, correct: score.correct + 1, wrong: score.wrong };
+    setScore(updated);
+    showMessage('정답!', 'correct');
+    setTimeout(() => goToNext(updated), 1500);
+  } else {
+    showMessage('오답!', 'wrong');
+    setInputAnswer('');
+  }
+};
+
+
+
 
 
   const handleTimeout = () => {
@@ -436,6 +446,7 @@ function SinglePlay() {
                 <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '12px', display: 'flex', alignItems: 'center' }}>
                   <input
                     ref={inputRef}
+                    autoFocus
                     type="text"
                     value={inputAnswer}
                     onChange={(e) => setInputAnswer(e.target.value)}
