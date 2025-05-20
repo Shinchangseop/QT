@@ -105,16 +105,13 @@ function SinglePlay() {
   const [audioAllowed, setAudioAllowed] = useState(false);
 
   useEffect(() => {
-  // 문제 로드 완료 후에만 시작 가능
-  if (questions.length > 0) {
-    const timeout = setTimeout(() => {
-      setIntroVisible(false); // 퀴즈 시작!
-      playSound(bellSound);   // 첫 문제 진입 시 bell.mp3 재생
-    }, 3000); // 3초 후 시작
-
-    return () => clearTimeout(timeout);
-  }
-}, [questions]);
+    if (questions.length > 0) {
+      const timeout = setTimeout(() => {
+        setIntroVisible(false); // ✅ 오직 화면 전환만!
+      }, 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [questions]);
 
 
   useEffect(() => {
@@ -216,6 +213,17 @@ function SinglePlay() {
       }
     }
   }, [timer, currentQuestion]);
+
+useEffect(() => {
+  if (!introVisible && currentIndex === 0 && questions.length > 0) {
+    // ✅ 화면이 완전히 intro에서 벗어나고 렌더링 완료된 후 재생
+    const bellTimeout = setTimeout(() => {
+      playSound(bellSound);
+    }, 200); // 렌더링 완료 후 소리 재생을 살짝 지연 (200~300ms 안정적)
+
+    return () => clearTimeout(bellTimeout);
+  }
+}, [introVisible]);
 
   const stopCountdownSound = () => {
     if (countdownRef.current) {
