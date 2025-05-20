@@ -36,15 +36,29 @@ function SinglePlay() {
   const API = import.meta.env.VITE_API_BASE_URL;
   const countdownRef = useRef(null);
 
-  const playSound = (audioFile, ref = null) => {
-    const audio = new Audio(audioFile);
-    if (ref) ref.current = audio;
-    audio.load();
-    audio.play().catch(e => {
-      console.warn('🔇 자동 재생 실패:', e);
-    });
-  };
+  const audioRef = useRef(null);
 
+  const playSound = (audioFile) => {
+    // 기존 오디오가 재생 중이면 중단
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+
+    const audio = new Audio(audioFile);
+    audioRef.current = audio;
+
+    audio.load();
+
+    audio
+      .play()
+      .then(() => {
+        console.log('🔊 재생 성공:', audioFile);
+      })
+      .catch((err) => {
+        console.warn('🔇 자동 재생 실패:', err.message);
+      });
+  };
 
   const replaySound = () => {
     if (player && typeof startTime === 'number') {
