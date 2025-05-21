@@ -21,48 +21,71 @@ router.delete('/delete/:quiz_id', async (req, res) => {
 });
 
 router.get('/list/paged', async (req, res) => {
-    const page = parseInt(req.query.page) || 1;
-    const limit = 12;
-    const offset = (page - 1) * limit;
-  
-    try {
-        const result = await db.query(`
-            SELECT 
-              q.quiz_id,
-              q.title,
-              u.username AS author,
-              COUNT(qs.question_id) AS total_questions,
-              COUNT(CASE WHEN qs.type = 'text' THEN 1 END) AS text_count,
-              COUNT(CASE WHEN qs.type = 'image' THEN 1 END) AS image_count,
-              COUNT(CASE WHEN qs.type = 'sound' THEN 1 END) AS sound_count
-            FROM "Quiz" q
-            JOIN "User" u ON q.created_by = u.user_id
-            JOIN question qs ON q.quiz_id = qs.quiz_id -- ✅ LEFT → INNER JOIN
-            GROUP BY q.quiz_id, u.username
-            ORDER BY q.created_at DESC
-            LIMIT $1 OFFSET $2
-          `, [limit, offset]);
-          
-          const totalResult = await db.query(`
-            SELECT COUNT(*) FROM (
-              SELECT 1
-              FROM "Quiz" q
-              JOIN question qs ON q.quiz_id = qs.quiz_id
-              GROUP BY q.quiz_id
-            ) AS filtered
-          `);
-          
-      const total = parseInt(totalResult.rows[0].count);
-  
-      res.json({
-        quizzes: result.rows,
-        totalPages: Math.ceil(total / limit)
-      });
-    } catch (err) {
-      console.error('❌ 퀴즈 목록 불러오기 실패:', err.message);
-      res.status(500).json({ error: '퀴즈 불러오기 실패' });
-    }
-  });
+  const page = parseInt(req.query.page) || 1;
+  const keyword = req.query.keyword || ''; // 🔍 추가
+  const limit = 12;
+  const offset = (page - 1) * limit;
+
+  try {
+    const result = await db.query(`
+      SELECT 
+        q.quiz_id,
+        q.title,
+        u.username AS author,
+        COUNT(qs.question_id) AS total_questions,
+        COUNT(CASE WHEN qs.type = 'text' THEN 1 END) AS text_count,
+        COUNT(CASE WHEN qs.type = 'image' THEN 1 END) AS image_count,
+        COUNT(CASE WHEN qs.type = 'sound' THEN 1 END) AS sound_count
+      FROM "Quiz" q
+      JOIN "User" u ON q.created_by = u.user_id
+      JOIN question qs ON q.quiz_id = qs.quiz_id
+      WHERE LOWER(q.title) LIKE LOWER('%' || $3 || '%') -- 🔍 검색어 적용
+      GROUP BY q.quiz_id, u.username
+      ORDER BY q.created_at DESC
+      LIMIT $1 OFFSET $2
+    `, [limit, offset, keyword]);
+
+    const totalResult = await db.query(`
+      SELECT COUNT(*) FROM (
+        SELECT 1
+        FROM "Quiz" q
+        JOIN question qs ON q.quiz_id = qs.quiz_id
+        WHERE LOWER(q.title) LIKE LOWER('%' || $1 || '%')
+        GROUP BY q.quiz_id
+      ) AS filtered
+    `, [keyword]);
+
+    const total = parseInt(totalResult.rows[0].count);
+    res.json({ quizzes: result.rows, totalPages: Math.ceil(total / limit) });
+
+  } catch (err) {
+    console.error('❌ 퀴즈 목록 불러오기 실패:', err.message);
+    res.status(500).json({ error: '퀴즈 불러오기 실패' });
+  }
+});
+
+
+
+// ✅ 관리자용 전체 퀴즈 목록
+router.get('/list/all', async (req, res) => {
+  try {
+    const result = await db.query(`
+      SELECT q.quiz_id, q.title, MAX(q.created_at) AS updated_at,
+             COUNT(CASE WHEN que.type = 'text' THEN 1 END) AS text_count,
+             COUNT(CASE WHEN que.type = 'image' THEN 1 END) AS image_count,
+             COUNT(CASE WHEN que.type = 'sound' THEN 1 END) AS sound_count
+      FROM "Quiz" q
+      LEFT JOIN question que ON q.quiz_id = que.quiz_id
+      GROUP BY q.quiz_id
+      ORDER BY updated_at DESC
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('❌ 전체 퀴즈 조회 실패:', err);
+    res.status(500).json({ error: '전체 퀴즈 조회 실패' });
+  }
+});
+
   
 
 // ✅ 퀴즈 목록 조회 (경로 우선!)
@@ -70,15 +93,21 @@ router.get('/list/:user_id', async (req, res) => {
   const userId = req.params.user_id;
   try {
     const result = await db.query(
-      `SELECT q.quiz_id, q.title, MAX(q.created_at) AS updated_at,
-              COUNT(CASE WHEN que.type = 'text' THEN 1 END) AS text_count,
-              COUNT(CASE WHEN que.type = 'image' THEN 1 END) AS image_count,
-              COUNT(CASE WHEN que.type = 'sound' THEN 1 END) AS sound_count
-       FROM "Quiz" q
-       LEFT JOIN question que ON q.quiz_id = que.quiz_id
-       WHERE q.created_by = $1
-       GROUP BY q.quiz_id
-       ORDER BY updated_at DESC`,
+      `SELECT q.quiz_id,
+       q.title,
+       MAX(q.created_at) AS updated_at,
+       u.username AS author,  -- ✅ 제작자 추가
+       COUNT(que.question_id) AS total_questions, -- ✅ 총 문제 수
+       COUNT(CASE WHEN que.type = 'text' THEN 1 END) AS text_count,
+       COUNT(CASE WHEN que.type = 'image' THEN 1 END) AS image_count,
+       COUNT(CASE WHEN que.type = 'sound' THEN 1 END) AS sound_count
+        FROM "Quiz" q
+        JOIN "User" u ON q.created_by = u.user_id
+        LEFT JOIN question que ON q.quiz_id = que.quiz_id
+        WHERE q.created_by = $1
+        GROUP BY q.quiz_id, u.username
+        ORDER BY updated_at DESC
+        `,
       [userId]
     );
     res.json(result.rows);

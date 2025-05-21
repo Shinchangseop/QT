@@ -16,13 +16,18 @@ function EditList() {
     }
     if (storedNickname) setNickname(storedNickname);
 
-    fetch(`/api/quiz/list/${userId}`)
-      .then(res => res.json())
-      .then(data => setQuizzes(data))
-      .catch(err => {
-        console.error('퀴즈 목록 조회 실패:', err);
-        alert('퀴즈 목록을 불러오지 못했습니다.');
-      });
+  const url = userId === '2' 
+    ? '/api/quiz/list/all' 
+    : `/api/quiz/list/${userId}`;
+
+  fetch(url)
+    .then(res => res.json())
+    .then(data => setQuizzes(data))
+    .catch(err => {
+      console.error('퀴즈 목록 조회 실패:', err);
+      alert('퀴즈 목록을 불러오지 못했습니다.');
+    });
+
   }, []);
 
   const formatDate = (utcDateStr) => {

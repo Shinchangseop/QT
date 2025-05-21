@@ -15,6 +15,8 @@ function Join() {
   const [questionCount, setQuestionCount] = useState(1);
   const [useDefaultTime, setUseDefaultTime] = useState(true);
   const [useHint, setUseHint] = useState(true);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const userId = localStorage.getItem('user_id');
 
   useEffect(() => {
     const found = quizList.find(q => q.quiz_id === selectedQuizId);
@@ -27,7 +29,13 @@ function Join() {
   const handleQuizSelect = (quizId) => {
     setSelectedQuizId(quizId);
   };
-``
+
+  const handleEnterKey = (e) => {
+  if (e.key === 'Enter') {
+    setCurrentPage(1);
+  }
+};
+
   const dummyRooms = [
   {
     id: 1,
@@ -55,18 +63,34 @@ function Join() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (showModal) {
-      fetch(`/api/quiz/list/paged?page=${currentPage}`)
-        .then(res => res.json())
-        .then(data => {
-          setQuizList(data.quizzes);
-          setTotalPages(data.totalPages);
-        })
-        .catch(err => {
-          console.error('❌ 퀴즈 목록 불러오기 실패:', err);
-        });
-    }
-  }, [showModal, currentPage]);
+    if (!showModal) return;
+
+    const encoded = encodeURIComponent(searchKeyword);
+    const isMine = quizTab === 'mine';
+    const base = isMine ? `/api/quiz/list/${userId}` : '/api/quiz/list/paged';
+    const url = `${base}?page=${currentPage}${searchKeyword ? `&keyword=${encoded}` : ''}`;
+
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        let list = data.quizzes || data;
+
+        // ✅ 클라이언트 필터링
+        if (isMine && searchKeyword) {
+          const lower = searchKeyword.toLowerCase();
+          list = list.filter(q => q.title.toLowerCase().includes(lower));
+        }
+
+        setQuizList(list);
+        if (data.totalPages) setTotalPages(data.totalPages);
+      })
+      .catch(err => {
+        console.error('❌ 퀴즈 목록 불러오기 실패:', err);
+      });
+
+  }, [showModal, currentPage, quizTab, searchKeyword]);
+
+
 
   const formatQuestionCount = (quiz) => {
     const icons = [];
@@ -169,16 +193,24 @@ function Join() {
             cursor: 'pointer'
           }}>{'>'}</button>
 
-          <div style={{ marginLeft: '20px', display: 'flex', alignItems: 'center' }}>
-            <input type="text" placeholder="검색" style={{
-              border: '1px solid #aaa',
-              borderRadius: '6px',
-              padding: '6px 10px',
-              width: '100px',
-              marginRight: '8px'
-            }} />
-            <button className="btn-red">🔍</button>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+            <input
+              type="text"
+              placeholder="검색"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              onKeyDown={handleEnterKey}   // ✅ 추가
+              style={{
+                border: '1px solid #aaa',
+                borderRadius: '6px',
+                padding: '6px 10px',
+                width: '400px'
+              }}
+            />
+
+            <button className="btn-red" onClick={() => setCurrentPage(1)}>🔍</button>
           </div>
+
         </div>
       </div>
 
@@ -190,24 +222,47 @@ function Join() {
 
       <div style={{ display: 'flex', justifyContent: 'center', gap: '30px', fontSize: '16px', marginBottom: '10px' }}>
         <label>
-          <input type="radio" checked={quizTab === 'all'} onChange={() => setQuizTab('all')} />
+          <input
+            type="radio"
+            checked={quizTab === 'all'}
+            onChange={() => {
+              setQuizTab('all');
+              setCurrentPage(1);
+            }}
+          />
           전체 퀴즈
         </label>
         <label>
-          <input type="radio" checked={quizTab === 'mine'} onChange={() => setQuizTab('mine')} />
+          <input
+            type="radio"
+            checked={quizTab === 'mine'}
+            onChange={() => {
+              setQuizTab('mine');
+              setCurrentPage(1);
+            }}
+          />
           내 퀴즈
         </label>
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
-        <input type="text" placeholder="검색" style={{
-          border: '1px solid #aaa',
-          borderRadius: '6px',
-          padding: '6px 10px',
-          width: '400px'
-        }} />
-        <button className="btn-red">🔍</button>
+        <input
+          type="text"
+          placeholder="검색"
+          value={searchKeyword}
+          onChange={(e) => setSearchKeyword(e.target.value)}
+          onKeyDown={handleEnterKey}   // ✅ 추가
+          style={{
+            border: '1px solid #aaa',
+            borderRadius: '6px',
+            padding: '6px 10px',
+            width: '400px'
+          }}
+        />
+
+        <button className="btn-red" onClick={() => setCurrentPage(1)}>🔍</button>
       </div>
+
 
       <div className="quiz-grid">
         {quizList.map((quiz) => (
