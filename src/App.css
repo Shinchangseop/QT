@@ -336,3 +336,56 @@ body {
   padding: 10px;
 }
 
+
+.main-container {
+  display: flex;
+  height: 500px;
+  width: 850px;
+  margin-right: 300px;
+  background-color: #fdf4e3; /* 전체 배경을 자연스럽게 맞춤 */
+  border-radius: 20px;
+}
+
+.slide-container {
+  width: 800px;     /* ✅ 고정 너비 (원하는 빨간 네모 크기) */
+  height: 450px;    /* ✅ 고정 높이 (4:3 비율 기준) */
+  margin-left: 25px;
+  padding: 0;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden; /* ✅ 이미지가 넘치면 잘라냄 */
+}
+
+.slide-image {
+  width: 100%;           /* 컨테이너에 맞춤 */
+  height: 100%;          
+  object-fit: contain;   /* 이미지 비율 유지하면서 꽉 차게 */
+}
+
+.right-login {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.slideshow-wrapper {
+  width: 100%;
+  height: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.left-slideshow {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: transparent;
+}
