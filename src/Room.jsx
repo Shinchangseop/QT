@@ -83,12 +83,14 @@ const handleSendMessage = () => {
   if (!trimmed) return;
   const newMsg = { user: localStorage.getItem('nickname') || '사용자', text: trimmed };
 
-  // ✅ 본인에게 바로 추가
-  setChatMessages(prev => [...prev, newMsg]);
-  setChatInput('');
+    const handleSendMessage = () => {
+    const trimmed = chatInput.trim();
+    if (!trimmed) return;
+    const newMsg = { user: localStorage.getItem('nickname') || '사용자', text: trimmed };
 
-  // ✅ 다른 유저에게도 전송
-  socket.emit('send-message', { roomId, message: newMsg });
+    socket.emit('send-message', { roomId, message: newMsg });
+    setChatInput('');
+    };
 };
 
 

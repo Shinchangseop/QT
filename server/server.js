@@ -82,7 +82,7 @@ io.on('connection', (socket) => {
 
 
     socket.on('send-message', ({ roomId, message }) => {
-    socket.to(roomId).emit('receive-message', message);
+    io.to(roomId).emit('receive-message', message);
   });
 
 
