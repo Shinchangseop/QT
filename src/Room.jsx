@@ -47,35 +47,33 @@ function Room() {
   // 🔌 소켓 연결
     useEffect(() => {
     const nickname = localStorage.getItem('nickname') || '익명';
-
-    socket.emit('set-nickname', nickname);
     socket.emit('join-room', { roomId, nickname });
 
-    socket.on('update-players', (playerList) => {
-        console.log('📡 서버로부터 플레이어 목록 수신:', playerList);
-        setPlayerList(prev => {
+    const handlePlayerUpdate = (playerList) => {
         const padded = [...playerList];
-        while (padded.length < 8) padded.push(null); // 8칸 맞추기
-        return padded;
-        });
-    });
+        while (padded.length < 8) padded.push(null);
+        setPlayerList(padded);
+    };
 
-    // ✅ cleanup 함수로 소켓 연결 해제
+    const handleChatMessage = (msg) => {
+        setChatMessages(prev => [...prev, msg]);
+    };
+
+    // 등록 전 기존 리스너 제거 (중복 방지)
+    socket.off('update-players', handlePlayerUpdate);
+    socket.off('receive-message', handleChatMessage);
+
+    // 리스너 등록
+    socket.on('update-players', handlePlayerUpdate);
+    socket.on('receive-message', handleChatMessage);
+
     return () => {
+        socket.off('update-players', handlePlayerUpdate);
+        socket.off('receive-message', handleChatMessage);
         socket.disconnect();
     };
     }, [roomId]);
 
-    useEffect(() => {
-        socket.on('receive-message', (msg) => {
-            setChatMessages(prev => [...prev, msg]);
-        });
-
-        // ✅ 컴포넌트 언마운트 시 리스너 해제
-        return () => {
-            socket.off('receive-message');
-        };
-        }, []);
 
 
 

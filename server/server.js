@@ -68,12 +68,10 @@ const rooms = {}; // { roomId: [nickname, nickname, ...] }
 io.on('connection', (socket) => {
   console.log('🟢 새 유저 접속');
 
-  socket.on('set-nickname', (nickname) => {
-    socket.nickname = nickname;
-  });
-
   socket.on('join-room', ({ roomId, nickname }) => {
+    socket.nickname = nickname; // 여기서 바로 설정
     socket.join(roomId);
+
     if (!rooms[roomId]) rooms[roomId] = [];
     if (!rooms[roomId].includes(nickname)) {
       rooms[roomId].push(nickname);
@@ -81,6 +79,7 @@ io.on('connection', (socket) => {
 
     io.to(roomId).emit('update-players', rooms[roomId]);
   });
+
 
     socket.on('send-message', ({ roomId, message }) => {
     socket.to(roomId).emit('receive-message', message);
