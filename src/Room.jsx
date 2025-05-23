@@ -83,15 +83,10 @@ const handleSendMessage = () => {
   if (!trimmed) return;
   const newMsg = { user: localStorage.getItem('nickname') || '사용자', text: trimmed };
 
-    const handleSendMessage = () => {
-    const trimmed = chatInput.trim();
-    if (!trimmed) return;
-    const newMsg = { user: localStorage.getItem('nickname') || '사용자', text: trimmed };
-
-    socket.emit('send-message', { roomId, message: newMsg });
-    setChatInput('');
-    };
+  socket.emit('send-message', { roomId, message: newMsg });
+  setChatInput('');
 };
+
 
 
   return (
