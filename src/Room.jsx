@@ -66,16 +66,33 @@ function Room() {
     };
     }, [roomId]);
 
+    useEffect(() => {
+        socket.on('receive-message', (msg) => {
+            setChatMessages(prev => [...prev, msg]);
+        });
+
+        // ✅ 컴포넌트 언마운트 시 리스너 해제
+        return () => {
+            socket.off('receive-message');
+        };
+        }, []);
+
 
 
   // 메시지 보내기
-  const handleSendMessage = () => {
-    const trimmed = chatInput.trim();
-    if (!trimmed) return;
-    const newMsg = { user: localStorage.getItem('nickname') || '사용자', text: trimmed };
-    setChatMessages(prev => [...prev, newMsg]);
-    setChatInput('');
-  };
+const handleSendMessage = () => {
+  const trimmed = chatInput.trim();
+  if (!trimmed) return;
+  const newMsg = { user: localStorage.getItem('nickname') || '사용자', text: trimmed };
+
+  // ✅ 본인에게 바로 추가
+  setChatMessages(prev => [...prev, newMsg]);
+  setChatInput('');
+
+  // ✅ 다른 유저에게도 전송
+  socket.emit('send-message', { roomId, message: newMsg });
+};
+
 
   return (
     <Layout>

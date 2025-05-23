@@ -82,6 +82,11 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('update-players', rooms[roomId]);
   });
 
+    socket.on('send-message', ({ roomId, message }) => {
+    socket.to(roomId).emit('receive-message', message);
+  });
+
+
   socket.on('disconnecting', () => {
     const joinedRooms = Array.from(socket.rooms).filter(id => id !== socket.id);
     for (const roomId of joinedRooms) {
