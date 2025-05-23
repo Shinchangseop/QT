@@ -56,8 +56,10 @@ function Room() {
     };
 
     const handleChatMessage = (msg) => {
-        setChatMessages(prev => [...prev, msg]);
+    console.log('📥 received message:', msg); // ✅ 확인용
+    setChatMessages(prev => [...prev, msg]);
     };
+
 
     // 등록 전 기존 리스너 제거 (중복 방지)
     socket.off('update-players', handlePlayerUpdate);
@@ -83,9 +85,11 @@ const handleSendMessage = () => {
   if (!trimmed) return;
   const newMsg = { user: localStorage.getItem('nickname') || '사용자', text: trimmed };
 
+  console.log('📤 emit message:', newMsg); // ✅ 확인용
   socket.emit('send-message', { roomId, message: newMsg });
   setChatInput('');
 };
+
 
 
 

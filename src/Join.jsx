@@ -46,7 +46,7 @@ function Join() {
   {
     id: 1,
     title: '같이 퀴즈 할 사람',
-    quizTitle: '넌센스 퀴즈1417',
+    quizTitle: '넌센스 퀴즈1423',
     participants: 3,
     maxParticipants: 8,
     showContent: true

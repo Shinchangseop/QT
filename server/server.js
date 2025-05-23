@@ -69,7 +69,7 @@ io.on('connection', (socket) => {
   console.log('🟢 새 유저 접속');
 
   socket.on('join-room', ({ roomId, nickname }) => {
-    socket.nickname = nickname; // 여기서 바로 설정
+    socket.nickname = nickname;
     socket.join(roomId);
 
     if (!rooms[roomId]) rooms[roomId] = [];
@@ -80,12 +80,12 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('update-players', rooms[roomId]);
   });
 
-
-    socket.on('send-message', ({ roomId, message }) => {
+  socket.on('send-message', ({ roomId, message }) => {
+    console.log(`📩 message from ${socket.nickname} to room ${roomId}:`, message);
     io.to(roomId).emit('receive-message', message);
   });
 
-
+  // ✅ 이 위치로 이동!
   socket.on('disconnecting', () => {
     const joinedRooms = Array.from(socket.rooms).filter(id => id !== socket.id);
     for (const roomId of joinedRooms) {
@@ -96,6 +96,7 @@ io.on('connection', (socket) => {
     }
   });
 });
+
 
 // ✅ 서버 실행
 const port = 5000;
