@@ -65,6 +65,8 @@ async function ensureRoomsTable() {
 // ✅ Socket.IO 연결 및 이벤트 처리
 const rooms = {}; // { roomId: [nickname, nickname, ...] }
 
+
+
 io.on('connection', (socket) => {
   console.log('🟢 새 유저 접속');
 

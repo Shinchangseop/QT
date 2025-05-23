@@ -3,7 +3,10 @@ import Layout from './Layout';
 import { useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
-const socket = io(import.meta.env.VITE_API_BASE_URL);
+const socket = io(import.meta.env.VITE_API_BASE_URL, {
+  transports: ['websocket'],
+  withCredentials: true
+});
 
 function Room() {
   const { roomId } = useParams();
@@ -43,6 +46,10 @@ function Room() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
+
+  useEffect(() => {
+  console.log('🧪 socket connected?', socket.connected);
+}, []);
 
   // 🔌 소켓 연결
     useEffect(() => {
