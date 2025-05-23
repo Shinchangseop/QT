@@ -12,6 +12,8 @@ import DiscordCallback from './DiscordCallback.jsx';
 import EditList from './EditList';
 import SinglePlay from "./SinglePlay.jsx";
 import SingleScore from './SingleScore'; 
+import Room from './Room.jsx';
+
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -28,6 +30,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/edit/:quizId" element={<EditNew isEditMode={true} />} />
           <Route path="/single/:quizId/:count/:time/:hint" element={<SinglePlay />} />
           <Route path="/single/score" element={<SingleScore />} />
+          <Route path="/room/:roomId" element={<Room />} />
         </Routes>
       </BrowserRouter>
     </GoogleOAuthProvider>
