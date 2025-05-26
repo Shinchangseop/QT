@@ -101,7 +101,10 @@ io.on('connection', (socket) => {
 
 app.get('/api/room/active', async (req, res) => {
   try {
-    const activeRoomIds = Object.keys(rooms).filter((roomId) => rooms[roomId].length > 0);
+    const activeRoomIds = Object.keys(rooms)
+      .filter((roomId) => rooms[roomId].length > 0)
+      .map((roomId) => Number(roomId)); // 💥 여기 중요!
+
     if (activeRoomIds.length === 0) return res.json([]);
 
     const placeholders = activeRoomIds.map((_, i) => `$${i + 1}`).join(', ');
@@ -129,6 +132,7 @@ app.get('/api/room/active', async (req, res) => {
     res.status(500).json({ error: '서버 오류' });
   }
 });
+
 
 
 
