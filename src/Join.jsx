@@ -21,6 +21,7 @@ function Join() {
   const [roomPassword, setRoomPassword] = useState('');
   const [maxPlayers, setMaxPlayers] = useState(8);
   const nickname = localStorage.getItem('nickname') || '사용자';
+  const [activeRooms, setActiveRooms] = useState([]);
 
 
 
@@ -32,6 +33,17 @@ function Join() {
     }
   }, [selectedQuizId, quizList]);
 
+  useEffect(() => {
+  fetch('/api/room/active')
+    .then(res => res.json())
+    .then(data => {
+      setActiveRooms(data);
+    })
+    .catch(err => {
+      console.error('❌ 활성 대기실 목록 불러오기 실패:', err);
+    });
+}, []);
+
   const handleQuizSelect = (quizId) => {
     setSelectedQuizId(quizId);
   };
@@ -42,6 +54,7 @@ function Join() {
   }
 };
 
+/* 
   const dummyRooms = [
   {
     id: 1,
@@ -63,7 +76,7 @@ function Join() {
     id: i + 3,
     showContent: false
   }))
-];
+]; */
 
 
   const navigate = useNavigate();
@@ -144,7 +157,7 @@ function Join() {
           gap: '14px 70px',
           justifyItems: 'center'
         }}>
-          {dummyRooms.map((room) => (
+          {activeRooms.map((room) => (
             <div key={room.id} style={{
               backgroundColor: 'white',
               borderRadius: '16px',
@@ -157,30 +170,30 @@ function Join() {
               width: '100%',
               maxWidth: '480px'
             }}>
-              {room.showContent ? (
-                <>
-                  <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-                    <div style={{
-                      width: '60px',
-                      height: '60px',
-                      borderRadius: '12px',
-                      backgroundColor: '#ccc'
-                    }} />
-                    <div>
-                      <div style={{ fontWeight: 'bold', fontSize: '15px' }}>{room.title}</div>
-                      <div style={{ fontSize: '14px' }}>{room.quizTitle}</div>
-                    </div>
+              {room.showContent && (
+              <>
+                <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                  <div style={{
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '12px',
+                    backgroundColor: '#ccc'
+                  }} />
+                  <div>
+                    <div style={{ fontWeight: 'bold', fontSize: '15px' }}>{room.title}</div>
+                    <div style={{ fontSize: '14px' }}>{room.quizTitle}</div>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
-                      {room.participants}/{room.maxParticipants}
-                    </div>
-                    <button className="btn-red" style={{ marginTop: '6px' }}>
-                      입장
-                    </button>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
+                    {room.participants}/{room.maxParticipants}
                   </div>
-                </>
-              ) : null}
+                  <button className="btn-red" style={{ marginTop: '6px' }} onClick={() => navigate(`/room/${room.id}`)}>
+                    입장
+                  </button>
+                </div>
+              </>
+            )}
             </div>
           ))}
 

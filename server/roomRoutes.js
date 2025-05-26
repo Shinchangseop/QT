@@ -45,4 +45,36 @@ router.get('/:roomId', async (req, res) => {
   }
 });
 
+// ✅ 현재 접속 인원 기준으로 DB에서 방 정보 + 퀴즈 정보 가져오기
+app.get('/api/room/active', async (req, res) => {
+  try {
+    const activeRoomIds = Object.keys(rooms).filter((roomId) => rooms[roomId].length > 0);
+    if (activeRoomIds.length === 0) return res.json([]);
+
+    const placeholders = activeRoomIds.map((_, i) => `$${i + 1}`).join(', ');
+    const query = `
+      SELECT r.id AS room_id, r.title, r.max_players, q.title AS quiz_title
+      FROM rooms r
+      JOIN quizzes q ON r.quiz_id = q.quiz_id
+      WHERE r.id IN (${placeholders})
+    `;
+
+    const { rows } = await db.query(query, activeRoomIds);
+
+    const result = rows.map((row) => ({
+      id: row.room_id,
+      title: row.title,
+      quizTitle: row.quiz_title,
+      participants: rooms[row.room_id]?.length || 0,
+      maxParticipants: row.max_players,
+      showContent: true
+    }));
+
+    res.json(result);
+  } catch (err) {
+    console.error('❌ 활성 대기실 불러오기 실패:', err);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
 module.exports = router;
