@@ -103,7 +103,9 @@ app.get('/api/room/active', async (req, res) => {
   try {
     const activeRoomIds = Object.keys(rooms)
       .filter((roomId) => rooms[roomId].length > 0)
-      .map((roomId) => Number(roomId)); // 💥 여기 중요!
+      .map((roomId) => Number(roomId)); // ✅ 여기 반드시 필요
+
+    console.log('🔍 activeRoomIds:', activeRoomIds);
 
     if (activeRoomIds.length === 0) return res.json([]);
 
