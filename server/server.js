@@ -103,11 +103,14 @@ app.get('/api/room/active', async (req, res) => {
   try {
     const activeRoomIds = Object.keys(rooms)
       .filter((roomId) => rooms[roomId].length > 0)
-      .map((roomId) => Number(roomId)); // ✅ 여기 반드시 필요
+      .map((roomId) => Number(roomId));
 
     console.log('🔍 activeRoomIds:', activeRoomIds);
 
-    if (activeRoomIds.length === 0) return res.json([]);
+    if (activeRoomIds.length === 0) {
+      console.log('ℹ️ No active rooms — returning empty list');
+      return res.json([]); // 빈 배열 응답
+    }
 
     const placeholders = activeRoomIds.map((_, i) => `$${i + 1}`).join(', ');
     const query = `
@@ -117,23 +120,28 @@ app.get('/api/room/active', async (req, res) => {
       WHERE r.id IN (${placeholders})
     `;
 
+    console.log('🧪 SQL:', query);
+    console.log('🧪 params:', activeRoomIds);
+
     const { rows } = await db.query(query, activeRoomIds);
 
     const result = rows.map((row) => ({
       id: row.room_id,
       title: row.title,
       quizTitle: row.quiz_title,
-      participants: rooms[row.room_id]?.length || 0,
+      participants: rooms[String(row.room_id)]?.length || 0,
       maxParticipants: row.max_players,
       showContent: true
     }));
 
+    console.log('✅ room list sent:', result);
     res.json(result);
   } catch (err) {
-    console.error('❌ 활성 대기실 불러오기 실패:', err);
+    console.error('❌ 활성 대기실 불러오기 실패:', err.stack);
     res.status(500).json({ error: '서버 오류' });
   }
 });
+
 
 
 

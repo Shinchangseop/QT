@@ -34,15 +34,21 @@ function Join() {
   }, [selectedQuizId, quizList]);
 
   useEffect(() => {
-  fetch('/api/room/active')
-    .then(res => res.json())
-    .then(data => {
-      setActiveRooms(data);
-    })
-    .catch(err => {
-      console.error('❌ 활성 대기실 목록 불러오기 실패:', err);
-    });
-}, []);
+    fetch('/api/room/active')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setActiveRooms(data);
+        } else {
+          console.error('⚠️ 비정상 데이터:', data);
+          setActiveRooms([]);
+        }
+      })
+      .catch(err => {
+        console.error('❌ 활성 대기실 목록 불러오기 실패:', err);
+        setActiveRooms([]); // fallback
+      });
+  }, []);
 
   const handleQuizSelect = (quizId) => {
     setSelectedQuizId(quizId);
