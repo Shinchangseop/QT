@@ -95,15 +95,20 @@ io.on('connection', (socket) => {
     if (!rooms[roomId].includes(nickname)) {
       rooms[roomId].push(nickname);
 
-      // ✅ DB 참가자 수 증가
+      // DB 업데이트
       await db.query(
         'UPDATE rooms SET current_players = current_players + 1 WHERE id = $1',
         [roomId]
       );
     }
 
-    io.to(roomId).emit('update-players', rooms[roomId]);
+    // ✅ 입장한 사용자에게 현재 명단 직접 전송
+    socket.emit('update-players', rooms[roomId]);
+
+    // ✅ 다른 사람들에게도 broadcast
+    socket.to(roomId).emit('update-players', rooms[roomId]);
   });
+
 
   socket.on('send-message', ({ roomId, message }) => {
     console.log(`📩 message from ${socket.nickname} to room ${roomId}:`, message);
