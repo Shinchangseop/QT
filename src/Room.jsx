@@ -54,7 +54,16 @@ function Room() {
   // 🔌 소켓 연결
     useEffect(() => {
     const nickname = localStorage.getItem('nickname') || '익명';
-    socket.emit('join-room', { roomId, nickname });
+
+    const emitJoin = () => {
+        socket.emit('join-room', { roomId, nickname });
+    };
+
+    if (socket.connected) {
+        emitJoin();
+    } else {
+        socket.once('connect', emitJoin);
+    }
 
     const handlePlayerUpdate = (playerList) => {
         const padded = [...playerList];
@@ -63,16 +72,13 @@ function Room() {
     };
 
     const handleChatMessage = (msg) => {
-    console.log('📥 received message:', msg); // ✅ 확인용
-    setChatMessages(prev => [...prev, msg]);
+        console.log('📥 received message:', msg);
+        setChatMessages(prev => [...prev, msg]);
     };
 
-
-    // 등록 전 기존 리스너 제거 (중복 방지)
+    // 리스너 중복 제거 후 등록
     socket.off('update-players', handlePlayerUpdate);
     socket.off('receive-message', handleChatMessage);
-
-    // 리스너 등록
     socket.on('update-players', handlePlayerUpdate);
     socket.on('receive-message', handleChatMessage);
 
