@@ -179,7 +179,7 @@ useEffect(() => {
           gap: '14px 70px',
           justifyItems: 'center'
         }}>
-          {Array.from({ length: 8 }).map((_, idx) => {
+          {Array.from({ length: 9 }).map((_, idx) => {
             const room = activeRooms[idx];
             return (
               <div key={idx} style={{
@@ -190,7 +190,7 @@ useEffect(() => {
                 alignItems: 'center',
                 justifyContent: room?.showContent ? 'space-between' : 'center',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                minHeight: '68px',
+                minHeight: '80px',  // ✅ 아래 크기 통일을 위해 살짝 수정
                 width: '100%',
                 maxWidth: '480px'
               }}>
@@ -218,11 +218,12 @@ useEffect(() => {
                     </div>
                   </>
                 ) : (
-                  <span style={{ color: '#ccc' }}>빈 슬롯</span>
+                  <span style={{ color: '#ccc', fontSize: '14px' }}>대기실 없음</span>
                 )}
               </div>
             );
           })}
+
         </div>
 
 
