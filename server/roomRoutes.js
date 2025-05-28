@@ -23,6 +23,10 @@ router.post('/create', async (req, res) => {
     );
 
     const roomId = result.rows[0].id;
+
+    const roomsMemory = require('./rooms');
+    roomsMemory[roomId] = [];
+
     res.status(201).json({ roomId });
   } catch (err) {
     console.error('❌ 방 생성 실패:', err);

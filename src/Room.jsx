@@ -65,20 +65,16 @@ function Room() {
         socket.once('connect', emitJoin);
     }
 
-    const handlePlayerUpdate = (playerList) => {
-        const padded = [...playerList];
+    const handlePlayerUpdate = (list) => {
+        const padded = [...list];
         while (padded.length < 8) padded.push(null);
         setPlayerList(padded);
     };
 
     const handleChatMessage = (msg) => {
-        console.log('📥 received message:', msg);
         setChatMessages(prev => [...prev, msg]);
     };
 
-    // 리스너 중복 제거 후 등록
-    socket.off('update-players', handlePlayerUpdate);
-    socket.off('receive-message', handleChatMessage);
     socket.on('update-players', handlePlayerUpdate);
     socket.on('receive-message', handleChatMessage);
 
@@ -88,7 +84,6 @@ function Room() {
         socket.disconnect();
     };
     }, [roomId]);
-
 
 
 
