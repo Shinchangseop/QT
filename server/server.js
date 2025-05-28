@@ -89,6 +89,7 @@ io.on('connection', (socket) => {
 
   socket.on('join-room', async ({ roomId, nickname }) => {
     socket.nickname = nickname;
+    socket.roomId = roomId;
     socket.join(roomId);
 
     if (!rooms[roomId]) rooms[roomId] = [];
@@ -114,7 +115,7 @@ io.on('connection', (socket) => {
   });
 
   // ✅ 이 위치로 이동!
-  socket.on('disconnect', async () => {
+  socket.on('disconnecting', async () => {
     const joinedRooms = Array.from(socket.rooms).filter(id => id !== socket.id);
     for (const roomId of joinedRooms) {
       if (rooms[roomId]) {
