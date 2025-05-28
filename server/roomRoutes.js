@@ -35,35 +35,23 @@ const roomsMemory = require('./rooms');
 
 router.get('/active', async (req, res) => {
   try {
-
-
-    const activeRoomIds = Object.keys(roomsMemory)
-      .filter((roomId) => roomsMemory[roomId].length > 0)
-      .map((roomId) => Number(roomId));
-
-    if (activeRoomIds.length === 0) return res.json([]);
-
-    const placeholders = activeRoomIds.map((_, i) => `$${i + 1}`).join(', ');
     const query = `
-      SELECT r.id AS room_id, r.title, r.max_players, q.title AS quiz_title
+      SELECT r.id AS room_id, r.title, r.max_players, r.current_players, q.title AS quiz_title
       FROM rooms r
-        JOIN "Quiz" q ON r.quiz_id = q.quiz_id
-      WHERE r.id IN (${placeholders})
+      JOIN "Quiz" q ON r.quiz_id = q.quiz_id
+      WHERE r.current_players > 0
     `;
 
-    const { rows } = await db.query(query, activeRoomIds);
+    const { rows } = await db.query(query);
 
     const result = rows.map((row) => ({
       id: row.room_id,
       title: row.title,
       quizTitle: row.quiz_title,
-      participants: roomsMemory[String(row.room_id)]?.length || 0,
+      participants: row.current_players,
       maxParticipants: row.max_players,
       showContent: true
     }));
-
-    console.log('🔍 activeRoomIds:', activeRoomIds); // HL -
-    console.log('🧪 SQL:', query); // HL -
 
     res.json(result);
   } catch (err) {
@@ -71,6 +59,7 @@ router.get('/active', async (req, res) => {
     res.status(500).json({ error: '서버 오류' });
   }
 });
+
 
 
 // ✅ GET /api/room/:roomId

@@ -41,7 +41,7 @@ app.use('/api/room', roomRoutes);
 
 // ✅ DB 테이블 생성
 async function ensureRoomsTable() {
-  const query = `
+  const createTableQuery = `
     CREATE TABLE IF NOT EXISTS rooms (
       id SERIAL PRIMARY KEY,
       title TEXT NOT NULL,
@@ -55,13 +55,29 @@ async function ensureRoomsTable() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `;
+
+  const addColumnQuery = `
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name='rooms' AND column_name='current_players'
+      ) THEN
+        ALTER TABLE rooms ADD COLUMN current_players INT DEFAULT 0;
+      END IF;
+    END
+    $$;
+  `;
+
   try {
-    await db.query(query);
-    console.log('✅ rooms 테이블 확인 완료 (없으면 생성됨)');
+    await db.query(createTableQuery);
+    await db.query(addColumnQuery);
+    console.log('✅ rooms 테이블 및 current_players 컬럼 확인 완료');
   } catch (err) {
-    console.error('❌ rooms 테이블 생성 실패:', err);
+    console.error('❌ rooms 테이블 또는 컬럼 생성 실패:', err);
   }
 }
+
 
 // ✅ Socket.IO 연결 및 이벤트 처리
 const rooms = require('./rooms'); // { roomId: [nickname, nickname, ...] }
@@ -71,13 +87,19 @@ const rooms = require('./rooms'); // { roomId: [nickname, nickname, ...] }
 io.on('connection', (socket) => {
   console.log('🟢 새 유저 접속');
 
-  socket.on('join-room', ({ roomId, nickname }) => {
+  socket.on('join-room', async ({ roomId, nickname }) => {
     socket.nickname = nickname;
     socket.join(roomId);
 
     if (!rooms[roomId]) rooms[roomId] = [];
     if (!rooms[roomId].includes(nickname)) {
       rooms[roomId].push(nickname);
+
+      // ✅ DB 참가자 수 증가
+      await db.query(
+        'UPDATE rooms SET current_players = current_players + 1 WHERE id = $1',
+        [roomId]
+      );
     }
 
     io.to(roomId).emit('update-players', rooms[roomId]);
@@ -89,12 +111,18 @@ io.on('connection', (socket) => {
   });
 
   // ✅ 이 위치로 이동!
-  socket.on('disconnecting', () => {
+  socket.on('disconnecting', async () => {
     const joinedRooms = Array.from(socket.rooms).filter(id => id !== socket.id);
     for (const roomId of joinedRooms) {
       if (rooms[roomId]) {
         rooms[roomId] = rooms[roomId].filter(n => n !== socket.nickname);
         io.to(roomId).emit('update-players', rooms[roomId]);
+
+        // ✅ DB 참가자 수 감소
+        await db.query(
+          'UPDATE rooms SET current_players = GREATEST(current_players - 1, 0) WHERE id = $1',
+          [roomId]
+        );
       }
     }
   });
