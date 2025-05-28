@@ -92,20 +92,18 @@ io.on('connection', (socket) => {
     socket.join(roomId);
 
     if (!rooms[roomId]) rooms[roomId] = [];
+
     if (!rooms[roomId].includes(nickname)) {
       rooms[roomId].push(nickname);
 
-      // DB 업데이트
       await db.query(
         'UPDATE rooms SET current_players = current_players + 1 WHERE id = $1',
         [roomId]
       );
     }
 
-    // ✅ 입장한 사용자에게 현재 명단 직접 전송
+    // 본인 + 다른 참가자 모두에게 전송
     socket.emit('update-players', rooms[roomId]);
-
-    // ✅ 다른 사람들에게도 broadcast
     socket.to(roomId).emit('update-players', rooms[roomId]);
   });
 
@@ -116,7 +114,7 @@ io.on('connection', (socket) => {
   });
 
   // ✅ 이 위치로 이동!
-  socket.on('disconnecting', async () => {
+  socket.on('disconnect', async () => {
     const joinedRooms = Array.from(socket.rooms).filter(id => id !== socket.id);
     for (const roomId of joinedRooms) {
       if (rooms[roomId]) {
@@ -176,13 +174,21 @@ app.get('/api/room/active', async (req, res) => {
   }
 });
 
-
+async function resetPlayerCounts() {
+  try {
+    await db.query('UPDATE rooms SET current_players = 0');
+    console.log('🔄 모든 방 current_players 초기화 완료');
+  } catch (err) {
+    console.error('❌ current_players 초기화 실패:', err);
+  }
+}
 
 
 
 // ✅ 서버 실행
 const port = 5000;
-ensureRoomsTable().then(() => {
+ensureRoomsTable().then(async () => {
+  await resetPlayerCounts(); // 👈 여기에 삽입!
   server.listen(port, () => {
     console.log(`🚀 서버 실행 중: http://localhost:${port}`);
   });
