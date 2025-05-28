@@ -47,7 +47,7 @@ router.get('/active', async (req, res) => {
     const query = `
       SELECT r.id AS room_id, r.title, r.max_players, q.title AS quiz_title
       FROM rooms r
-      JOIN quizzes q ON r.quiz_id = q.quiz_id
+        JOIN "Quiz" q ON r.quiz_id = q.quiz_id
       WHERE r.id IN (${placeholders})
     `;
 
