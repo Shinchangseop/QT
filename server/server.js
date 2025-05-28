@@ -63,7 +63,7 @@ async function ensureRoomsTable() {
 }
 
 // ✅ Socket.IO 연결 및 이벤트 처리
-const rooms = {}; // { roomId: [nickname, nickname, ...] }
+const rooms = require('./rooms'); // { roomId: [nickname, nickname, ...] }
 
 
 
@@ -154,4 +154,4 @@ ensureRoomsTable().then(() => {
   });
 });
 
-module.exports.rooms = rooms;
+module.exports = { server, rooms };

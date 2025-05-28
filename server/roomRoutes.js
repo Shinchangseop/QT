@@ -31,10 +31,12 @@ router.post('/create', async (req, res) => {
 });
 
 // ✅ 활성화된 방 목록 조회 (rooms 객체 기반)
-const roomsMemory = require('./server').rooms; // server.js의 rooms 객체 공유 필요
+const roomsMemory = require('./rooms');
 
 router.get('/active', async (req, res) => {
   try {
+
+
     const activeRoomIds = Object.keys(roomsMemory)
       .filter((roomId) => roomsMemory[roomId].length > 0)
       .map((roomId) => Number(roomId));
@@ -59,6 +61,9 @@ router.get('/active', async (req, res) => {
       maxParticipants: row.max_players,
       showContent: true
     }));
+
+    console.log('🔍 activeRoomIds:', activeRoomIds); // HL -
+    console.log('🧪 SQL:', query); // HL -
 
     res.json(result);
   } catch (err) {
