@@ -20,8 +20,9 @@ const server = http.createServer(app);
 // ✅ Socket.IO 설정
 const io = new Server(server, {
   cors: {
-    origin: '*', // 필요시 프론트엔드 주소로 변경
-    methods: ['GET', 'POST']
+    origin: 'https://qtweb.xyz',
+    methods: ['GET', 'POST'],
+    credentials: true
   }
 });
 
