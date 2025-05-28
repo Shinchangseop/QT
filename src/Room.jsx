@@ -3,13 +3,9 @@ import Layout from './Layout';
 import { useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
-const socket = io(import.meta.env.VITE_API_BASE_URL, {
-  transports: ['websocket'],
-  withCredentials: true
-});
-
 function Room() {
   const { roomId } = useParams();
+  const socketRef = useRef(null);
   const [roomInfo, setRoomInfo] = useState(null);
   const [quizInfo, setQuizInfo] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
@@ -48,43 +44,48 @@ function Room() {
   }, [chatMessages]);
 
   useEffect(() => {
-  console.log('🧪 socket connected?', socket.connected);
+    console.log('🧪 socket connected?', socketRef.current?.connected);
 }, []);
 
-  // 🔌 소켓 연결
-    useEffect(() => {
+ useEffect(() => {
+    const socket = io(import.meta.env.VITE_API_BASE_URL, {
+      transports: ['websocket'],
+      withCredentials: true
+    });
+    socketRef.current = socket; // 저장
+
     const nickname = localStorage.getItem('nickname') || '익명';
+    if (!nickname || !roomId) return;
 
     const emitJoin = () => {
-        socket.emit('join-room', { roomId, nickname });
+      socket.emit('join-room', { roomId, nickname });
     };
 
     if (socket.connected) {
-        emitJoin();
+      emitJoin();
     } else {
-        socket.once('connect', emitJoin);
+      socket.once('connect', emitJoin);
     }
 
     const handlePlayerUpdate = (list) => {
-        const padded = [...list];
-        while (padded.length < 8) padded.push(null);
-        setPlayerList(padded);
+      const padded = [...list];
+      while (padded.length < 8) padded.push(null);
+      setPlayerList(padded);
     };
 
     const handleChatMessage = (msg) => {
-        setChatMessages(prev => [...prev, msg]);
+      setChatMessages(prev => [...prev, msg]);
     };
 
     socket.on('update-players', handlePlayerUpdate);
     socket.on('receive-message', handleChatMessage);
 
     return () => {
-        socket.off('update-players', handlePlayerUpdate);
-        socket.off('receive-message', handleChatMessage);
-        socket.disconnect();
+      socket.off('update-players', handlePlayerUpdate);
+      socket.off('receive-message', handleChatMessage);
+      socket.disconnect(); // ✅ 반드시 종료
     };
-    }, [roomId]);
-
+  }, [roomId]);
 
 
   // 메시지 보내기
@@ -94,7 +95,7 @@ const handleSendMessage = () => {
   const newMsg = { user: localStorage.getItem('nickname') || '사용자', text: trimmed };
 
   console.log('📤 emit message:', newMsg); // ✅ 확인용
-  socket.emit('send-message', { roomId, message: newMsg });
+  socketRef.current?.emit('send-message', { roomId, message: newMsg });
   setChatInput('');
 };
 
