@@ -181,48 +181,62 @@ useEffect(() => {
         }}>
           {Array.from({ length: 9 }).map((_, idx) => {
             const room = activeRooms[idx];
+            const isEmpty = !room?.showContent;
+
             return (
-              <div key={idx} style={{
-                backgroundColor: 'white',
-                borderRadius: '16px',
-                padding: '14px 24px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: room?.showContent ? 'space-between' : 'center',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                minHeight: '80px',  // ✅ 아래 크기 통일을 위해 살짝 수정
-                width: '100%',
-                maxWidth: '480px'
-              }}>
-                {room?.showContent ? (
-                  <>
-                    <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-                      <div style={{
-                        width: '60px',
-                        height: '60px',
-                        borderRadius: '12px',
-                        backgroundColor: '#ccc'
-                      }} />
-                      <div>
-                        <div style={{ fontWeight: 'bold', fontSize: '15px' }}>{room.title}</div>
-                        <div style={{ fontSize: '14px' }}>{room.quizTitle}</div>
-                      </div>
+              <div
+                key={idx}
+                style={{
+                  backgroundColor: 'white',
+                  borderRadius: '16px',
+                  padding: '14px 24px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                  minHeight: '80px',
+                  width: '100%',
+                  maxWidth: '480px',
+                  opacity: isEmpty ? 0.4 : 1,
+                  pointerEvents: isEmpty ? 'none' : 'auto' // 클릭 방지
+                }}
+              >
+                <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                  <div
+                    style={{
+                      width: '60px',
+                      height: '60px',
+                      borderRadius: '12px',
+                      backgroundColor: '#ccc'
+                    }}
+                  />
+                  <div>
+                    <div style={{ fontWeight: 'bold', fontSize: '15px' }}>
+                      {isEmpty ? '대기실 없음' : room.title}
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
-                        {room.participants}/{room.maxParticipants}
-                      </div>
-                      <button className="btn-red" style={{ marginTop: '6px' }} onClick={() => navigate(`/room/${room.id}`)}>
-                        입장
-                      </button>
+                    <div style={{ fontSize: '14px' }}>
+                      {isEmpty ? '퀴즈 없음' : room.quizTitle}
                     </div>
-                  </>
-                ) : (
-                  <span style={{ color: '#ccc', fontSize: '14px' }}>대기실 없음</span>
-                )}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
+                    {isEmpty ? '0/0' : `${room.participants}/${room.maxParticipants}`}
+                  </div>
+                  {!isEmpty && (
+                    <button
+                      className="btn-red"
+                      style={{ marginTop: '6px' }}
+                      onClick={() => navigate(`/room/${room.id}`)}
+                    >
+                      입장
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })}
+
 
         </div>
 
