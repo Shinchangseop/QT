@@ -153,3 +153,5 @@ ensureRoomsTable().then(() => {
     console.log(`🚀 서버 실행 중: http://localhost:${port}`);
   });
 });
+
+module.exports.rooms = rooms;
