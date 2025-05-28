@@ -106,6 +106,7 @@ io.on('connection', (socket) => {
     // 본인 + 다른 참가자 모두에게 전송
     socket.emit('update-players', rooms[roomId]);
     socket.to(roomId).emit('update-players', rooms[roomId]);
+    await broadcastRoomList();
   });
 
 
@@ -129,6 +130,7 @@ io.on('connection', (socket) => {
         );
       }
     }
+    await broadcastRoomList();
   });
 });
 
@@ -184,6 +186,34 @@ async function resetPlayerCounts() {
   }
 }
 
+// 대기실 목록 브로드캐스트 함수 추가
+async function broadcastRoomList() {
+  const activeRoomIds = Object.keys(rooms).filter(id => rooms[id].length > 0).map(Number);
+  if (activeRoomIds.length === 0) {
+    io.emit('update-room-list', []);
+    return;
+  }
+
+  const placeholders = activeRoomIds.map((_, i) => `$${i + 1}`).join(', ');
+  const query = `
+    SELECT r.id AS room_id, r.title, r.max_players, q.title AS quiz_title
+    FROM rooms r
+    JOIN "Quiz" q ON r.quiz_id = q.quiz_id
+    WHERE r.id IN (${placeholders})
+  `;
+  const { rows } = await db.query(query, activeRoomIds);
+
+  const result = rows.map(row => ({
+    id: row.room_id,
+    title: row.title,
+    quizTitle: row.quiz_title,
+    participants: rooms[String(row.room_id)]?.length || 0,
+    maxParticipants: row.max_players,
+    showContent: true
+  }));
+
+  io.emit('update-room-list', result);
+}
 
 
 // ✅ 서버 실행

@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import Layout from './Layout';
 import './App.css';
 import { useNavigate } from 'react-router-dom';
+import { io } from 'socket.io-client';
+
+const socket = io(import.meta.env.VITE_API_BASE_URL, {
+  transports: ['websocket'],
+  withCredentials: true
+});
 
 function Join() {
   const [showModal, setShowModal] = useState(false);
@@ -49,6 +55,16 @@ function Join() {
         setActiveRooms([]); // fallback
       });
   }, []);
+
+useEffect(() => {
+  socket.on('update-room-list', (updatedRooms) => {
+    setActiveRooms(updatedRooms);
+  });
+
+  return () => {
+    socket.off('update-room-list');
+  };
+}, []);
 
   const handleQuizSelect = (quizId) => {
     setSelectedQuizId(quizId);
@@ -163,47 +179,52 @@ function Join() {
           gap: '14px 70px',
           justifyItems: 'center'
         }}>
-          {activeRooms.map((room) => (
-            <div key={room.id} style={{
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              padding: '14px 24px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: room.showContent ? 'space-between' : 'center',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-              minHeight: '68px',
-              width: '100%',
-              maxWidth: '480px'
-            }}>
-              {room.showContent && (
-              <>
-                <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-                  <div style={{
-                    width: '60px',
-                    height: '60px',
-                    borderRadius: '12px',
-                    backgroundColor: '#ccc'
-                  }} />
-                  <div>
-                    <div style={{ fontWeight: 'bold', fontSize: '15px' }}>{room.title}</div>
-                    <div style={{ fontSize: '14px' }}>{room.quizTitle}</div>
-                  </div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
-                    {room.participants}/{room.maxParticipants}
-                  </div>
-                  <button className="btn-red" style={{ marginTop: '6px' }} onClick={() => navigate(`/room/${room.id}`)}>
-                    입장
-                  </button>
-                </div>
-              </>
-            )}
-            </div>
-          ))}
-
+          {Array.from({ length: 8 }).map((_, idx) => {
+            const room = activeRooms[idx];
+            return (
+              <div key={idx} style={{
+                backgroundColor: 'white',
+                borderRadius: '16px',
+                padding: '14px 24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: room?.showContent ? 'space-between' : 'center',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                minHeight: '68px',
+                width: '100%',
+                maxWidth: '480px'
+              }}>
+                {room?.showContent ? (
+                  <>
+                    <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                      <div style={{
+                        width: '60px',
+                        height: '60px',
+                        borderRadius: '12px',
+                        backgroundColor: '#ccc'
+                      }} />
+                      <div>
+                        <div style={{ fontWeight: 'bold', fontSize: '15px' }}>{room.title}</div>
+                        <div style={{ fontSize: '14px' }}>{room.quizTitle}</div>
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
+                        {room.participants}/{room.maxParticipants}
+                      </div>
+                      <button className="btn-red" style={{ marginTop: '6px' }} onClick={() => navigate(`/room/${room.id}`)}>
+                        입장
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <span style={{ color: '#ccc' }}>빈 슬롯</span>
+                )}
+              </div>
+            );
+          })}
         </div>
+
 
         {/* 페이지닷 & 검색창 */}
         <div style={{
