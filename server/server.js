@@ -115,6 +115,11 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('receive-message', message);
   });
 
+  socket.on('start-game', ({ roomId }) => {
+    console.log(`🎮 ${roomId} 게임 시작`);
+    io.to(roomId).emit('game-started'); // 방 안 모든 유저에게 전달
+  });
+
   // ✅ 이 위치로 이동!
   socket.on('disconnecting', async () => {
     const joinedRooms = Array.from(socket.rooms).filter(id => id !== socket.id);

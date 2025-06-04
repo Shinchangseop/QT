@@ -13,6 +13,7 @@ import EditList from './EditList';
 import SinglePlay from "./SinglePlay.jsx";
 import SingleScore from './SingleScore'; 
 import Room from './Room.jsx';
+import MultiPlay from './MultiPlay.jsx';
 
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -31,6 +32,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/single/:quizId/:count/:time/:hint" element={<SinglePlay />} />
           <Route path="/single/score" element={<SingleScore />} />
           <Route path="/room/:roomId" element={<Room />} />
+          <Route path="/multi/:roomId" element={<MultiPlay />} />
         </Routes>
       </BrowserRouter>
     </GoogleOAuthProvider>

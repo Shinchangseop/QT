@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import Layout from './Layout';
 import { useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
+import { useNavigate } from 'react-router-dom';
 
 function Room() {
   const { roomId } = useParams();
@@ -11,7 +12,11 @@ function Room() {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const chatEndRef = useRef(null);
-  const [playerList, setPlayerList] = useState(Array(8).fill(null)); 
+  const [playerList, setPlayerList] = useState(Array(8).fill(null));
+  const navigate = useNavigate();
+
+  const nickname = localStorage.getItem('nickname') || '익명';
+    const isHost = roomInfo && nickname === roomInfo.created_by;
 
   // 🔄 방 정보 및 퀴즈 정보 불러오기
   useEffect(() => {
@@ -54,7 +59,6 @@ function Room() {
     });
     socketRef.current = socket; // 저장
 
-    const nickname = localStorage.getItem('nickname') || '익명';
     if (!nickname || !roomId) return;
 
     const emitJoin = () => {
@@ -77,6 +81,11 @@ function Room() {
       setChatMessages(prev => [...prev, msg]);
     };
 
+    socket.on('game-started', () => {
+    console.log('🎮 게임이 시작되었습니다!');
+    navigate(`/multi/${roomId}`);
+    });
+
     socket.on('update-players', handlePlayerUpdate);
     socket.on('receive-message', handleChatMessage);
 
@@ -87,6 +96,15 @@ function Room() {
     };
   }, [roomId]);
 
+  const handleStartGame = () => {
+  if (!socketRef.current) return;
+
+  // 1. 서버에 'start-game' 이벤트 전파
+  socketRef.current.emit('start-game', { roomId });
+
+  // 2. 방장은 바로 게임 화면으로 이동
+  navigate(`/multi/${roomId}`);
+};
 
   // 메시지 보내기
 const handleSendMessage = () => {
@@ -129,7 +147,9 @@ const handleSendMessage = () => {
                 <p>제한 시간: {roomInfo.use_timer ? '기본 시간' : '제한 없음'}</p>
               </div>
               <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '20px' }}>
-                <button className="btn-orange">게임 시작</button>
+                {isHost && (
+                    <button className="btn-orange" onClick={handleStartGame}>게임 시작</button>
+                )}
                 <button className="btn-red">설정 변경</button>
               </div>
             </div>
