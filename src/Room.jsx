@@ -52,49 +52,53 @@ function Room() {
     console.log('🧪 socket connected?', socketRef.current?.connected);
 }, []);
 
- useEffect(() => {
+    useEffect(() => {
     const socket = io(import.meta.env.VITE_API_BASE_URL, {
-      transports: ['websocket'],
-      withCredentials: true
+        transports: ['websocket'],
+        withCredentials: true
     });
-    socketRef.current = socket; // 저장
+    socketRef.current = socket;
 
     if (!nickname || !roomId) return;
 
     const emitJoin = () => {
-      socket.emit('join-room', { roomId, nickname });
+        socket.emit('join-room', { roomId, nickname });
     };
 
     if (socket.connected) {
-      emitJoin();
+        emitJoin();
     } else {
-      socket.once('connect', emitJoin);
+        socket.once('connect', emitJoin);
     }
 
     const handlePlayerUpdate = (list) => {
-      const padded = [...list];
-      while (padded.length < 8) padded.push(null);
-      setPlayerList(padded);
+        const padded = [...list];
+        while (padded.length < 8) padded.push(null);
+        setPlayerList(padded);
     };
 
     const handleChatMessage = (msg) => {
-      setChatMessages(prev => [...prev, msg]);
+        setChatMessages(prev => [...prev, msg]);
     };
 
-    socket.on('game-started', () => {
-    console.log('🎮 게임이 시작되었습니다!');
-    navigate(`/multi/${roomId}`);
-    });
+    const handleGameStarted = () => {
+        console.log('🎮 게임이 시작되었습니다!');
+        navigate(`/multi/${roomId}`);
+    };
 
+    // ✅ 이벤트 리스너 등록
     socket.on('update-players', handlePlayerUpdate);
     socket.on('receive-message', handleChatMessage);
+    socket.on('game-started', handleGameStarted);
 
     return () => {
-      socket.off('update-players', handlePlayerUpdate);
-      socket.off('receive-message', handleChatMessage);
-      socket.disconnect(); // ✅ 반드시 종료
+        socket.off('update-players', handlePlayerUpdate);
+        socket.off('receive-message', handleChatMessage);
+        socket.off('game-started', handleGameStarted);
+        socket.disconnect();
     };
-  }, [roomId]);
+    }, [roomId, nickname, navigate]);
+
 
   const handleStartGame = () => {
   if (!socketRef.current) return;
