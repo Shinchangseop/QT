@@ -10,9 +10,7 @@ import FAILSound from "./assets/sound/FAIL.MP3";
 import SUCCESSSound from "./assets/sound/SUCCESS.mp3";
 import SCORE_ALARMSound from "./assets/sound/SCORE_ALARM.mp3";
 
-const successAudio = useRef(new Audio(SUCCESSSound));
-const failAudio = useRef(new Audio(FAILSound));
-const wrongAudio = useRef(new Audio(SCORE_ALARMSound));
+
 
 // 퀴즈 정보 영역 렌더
 function QuizHeader({ quizTitle, currentIdx, total, timer }) {
@@ -59,6 +57,10 @@ function MultiPlay() {
   const [player, setPlayer] = useState(null);
 
   const nickname = localStorage.getItem('nickname') || '익명';
+
+  const successAudio = useRef(new Audio(SUCCESSSound));
+    const failAudio = useRef(new Audio(FAILSound));
+    const wrongAudio = useRef(new Audio(SCORE_ALARMSound));
 
   // 문제 중복 제거 및 랜덤화 (프론트)
   function getUniqueQuestions(qs, count) {
@@ -199,6 +201,7 @@ useEffect(() => {
           nextIdx: currentIdx + 1 < questions.length ? currentIdx + 1 : undefined
         });
       } else {
+          wrongAudio.current.play(); // 오답 사운드
         socketRef.current.emit('send-message', {
             roomId,
             message: { user: nickname, text: trimmed }
