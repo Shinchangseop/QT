@@ -17,6 +17,8 @@ const roomRoutes = require('./roomRoutes');
 const app = express();
 const server = http.createServer(app);
 
+const multiPlayState = {};
+
 // ✅ Socket.IO 설정
 const io = new Server(server, {
   cors: {
@@ -38,6 +40,7 @@ app.use('/api/question', questionRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/room', roomRoutes);
+
 
 // ✅ DB 테이블 생성
 async function ensureRoomsTable() {
@@ -136,6 +139,38 @@ io.on('connection', (socket) => {
       }
     }
     await broadcastRoomList();
+  });
+
+    // 멀티 정답 처리
+  socket.on('multi-answer', ({ roomId, user, answer, correct, nextIdx }) => {
+    // 방 상태 생성
+    if (!multiPlayState[roomId]) {
+      multiPlayState[roomId] = { answered: false, scores: {} };
+    }
+
+    // 선착순 처리 (이미 맞춘 사람 있으면 무시)
+    if (multiPlayState[roomId].answered) return;
+
+    if (correct) {
+      multiPlayState[roomId].answered = true;
+      // 점수 갱신
+      if (!multiPlayState[roomId].scores[user]) {
+        multiPlayState[roomId].scores[user] = 0;
+      }
+      multiPlayState[roomId].scores[user] += 1;
+    }
+
+    // 모두에게 정답 결과와 다음 문제 인덱스 브로드캐스트
+    io.to(roomId).emit('multi-answer', { user, correct, nextIdx });
+
+    // 다음 문제로 넘어갈 때 answered 플래그 리셋
+    if (correct && nextIdx !== undefined) {
+      setTimeout(() => {
+        multiPlayState[roomId].answered = false;
+        // 문제 인덱스 동기화
+        io.to(roomId).emit('multi-sync-question', nextIdx);
+      }, 1200);
+    }
   });
 });
 
