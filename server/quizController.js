@@ -22,7 +22,7 @@ const getQuizById = async (quizId) => {
   if (!quiz) return null;
 
   const questionRes = await client.query(
-    'SELECT * FROM "Question" WHERE quiz_id = $1 ORDER BY question_id',
+    'SELECT * FROM question WHERE quiz_id = $1 ORDER BY question_id',
     [quizId]
   );
   quiz.questions = questionRes.rows;
