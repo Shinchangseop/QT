@@ -142,7 +142,7 @@ function MultiPlay() {
             </div>
 
             <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <button className="btn-orange">💡 힌트</button>
+              <button className="btn-orange">💡 힌트2</button>
               <button className="btn-orange">⏩ 스킵</button>
               <button className="btn-orange" onClick={() => navigate('/')}>❌ 나가기</button>
             </div>
