@@ -101,6 +101,16 @@ useEffect(() => {
         console.log('✅ MultiPlay connected:', socket.id);  // 🔍 이거 찍히는지 확인
         socket.emit('join-room', { roomId, nickname });
     });
+    
+useEffect(() => {
+  const fetchRoomInfo = async () => {
+    const res = await fetch(`/api/room/${roomId}`);
+    const data = await res.json();
+    setRoomInfo(data.room);
+    setQuizInfo(data.quiz);
+  };
+  fetchRoomInfo();
+}, [roomId]);
 
 
 
@@ -124,6 +134,12 @@ useEffect(() => {
   socket.on('receive-message', (message) => {
     setChatMessages(prev => [...prev, message]);
   });
+
+    useEffect(() => {
+    if (chatEndRef.current) {
+        chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+    }, [chatMessages]);
 
   socket.on('init-scores', (scores) => {
     setPlayerScores(Object.entries(scores).map(([user, score]) => ({ user, score })));
@@ -214,6 +230,16 @@ useEffect(() => {
     <Layout>
       <div style={{ width: '80%', backgroundColor: '#fff4e6', padding: '20px', borderRadius: '20px', margin: '0 auto' }}>
         {/* 3. 퀴즈 정보/타이머 최상단 표시 */}
+        {roomInfo?.title && quizInfo?.title && (
+            <div style={{
+                fontSize: '20px',
+                fontWeight: 'bold',
+                marginBottom: '10px',
+                textAlign: 'center'
+            }}>
+                {roomInfo.title} | {quizInfo.title}
+            </div>
+        )}
         <QuizHeader
           quizTitle={quizInfo?.title || ''}
           currentIdx={currentIdx}
@@ -239,15 +265,23 @@ useEffect(() => {
               textAlign: 'center',
               position: 'relative'
             }}>
-              {/* 4. 정답자 메시지 */}
-              {isAnswered && answeredUser &&
+              {/* 정답자 메시지 */}
+                {isAnswered && (
                 <div style={{
-                  position: 'absolute', top: 0, left: 0, right: 0, fontSize: 28,
-                  color: answerType === 'correct' ? 'green' : 'red', fontWeight: 'bold', marginTop: 12
+                    position: 'absolute',
+                    top: '8px',
+                    left: 0,
+                    right: 0,
+                    textAlign: 'center',
+                    fontSize: answeredUser === '[SYSTEM]' ? '20px' : '28px',
+                    fontWeight: 'bold',
+                    color: answerType === 'correct' ? 'green' : 'red'
                 }}>
-                  {`${answeredUser}님 정답!`}
+                    {answeredUser === '[SYSTEM]'
+                    ? <>전원 오답!<br /><span style={{ fontSize: '18px' }}>정답: {questions[currentIdx]?.answer}</span></>
+                    : `${answeredUser}님 정답!`}
                 </div>
-              }
+                )}
               {!currentQ
                 ? '문제를 불러오는 중...'
                 : currentQ.type === 'image'
