@@ -16,4 +16,21 @@ const addQuiz = async (req, res) => {
   }
 };
 
-module.exports = { addQuiz };
+const getQuizById = async (quizId) => {
+  const quizRes = await client.query('SELECT * FROM "Quiz" WHERE quiz_id = $1', [quizId]);
+  const quiz = quizRes.rows[0];
+  if (!quiz) return null;
+
+  const questionRes = await client.query(
+    'SELECT * FROM "Question" WHERE quiz_id = $1 ORDER BY question_id',
+    [quizId]
+  );
+  quiz.questions = questionRes.rows;
+  return quiz;
+};
+
+// 기존 addQuiz 유지하면서 함께 export
+module.exports = {
+  addQuiz,
+  getQuizById
+};
