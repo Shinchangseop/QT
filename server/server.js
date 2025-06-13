@@ -172,6 +172,7 @@ io.on('connection', (socket) => {
     // 클라이언트 전송
     io.to(roomId).emit('init-scores', initialScores);
     io.to(roomId).emit('start-quiz', { questions: unique });
+    io.to(roomId).emit('game-started');
     console.log(`✅ 문제 ${unique.length}개 전송됨`);
   });
 
