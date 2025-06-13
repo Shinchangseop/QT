@@ -223,10 +223,14 @@ io.on('connection', (socket) => {
       }
     }
 
-    if (nextIdx === undefined) {
+  if (nextIdx === undefined) {
+    const sortedResults = Object.entries(multiPlayState[roomId].scores)
+      .map(([user, score]) => ({ user, score }))
+      .sort((a, b) => b.score - a.score);
+
     io.to(roomId).emit('game-over', {
       roomId,
-      scores: multiPlayState[roomId].scores
+      results: sortedResults // ✅ 클라이언트에서 기대하는 이름
     });
   }
 

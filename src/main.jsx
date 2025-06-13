@@ -14,6 +14,7 @@ import SinglePlay from "./SinglePlay.jsx";
 import SingleScore from './SingleScore'; 
 import Room from './Room.jsx';
 import MultiPlay from './MultiPlay.jsx';
+import MultiScore from './multiscore';
 
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -33,6 +34,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/single/score" element={<SingleScore />} />
           <Route path="/room/:roomId" element={<Room />} />
           <Route path="/multi/:roomId" element={<MultiPlay />} />
+          <Route path="/multiscore" element={<MultiScore />} />
         </Routes>
       </BrowserRouter>
     </GoogleOAuthProvider>
