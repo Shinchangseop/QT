@@ -1,9 +1,27 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
+import YouTube from 'react-youtube';
 import Layout from './Layout';
 
-const TIMER_DEFAULT = 20; // 제한 시간(초)
+// 퀴즈 정보 영역 렌더
+function QuizHeader({ quizTitle, currentIdx, total, timer }) {
+  return (
+    <div style={{
+      backgroundColor: '#fdebd0',
+      borderRadius: '12px',
+      padding: '12px 0',
+      marginBottom: '12px',
+      textAlign: 'center'
+    }}>
+      <h2 style={{ margin: 0 }}>{quizTitle}</h2>
+      <div style={{ fontSize: '20px', fontWeight: 'bold', display: 'flex', justifyContent: 'center', gap: '60px' }}>
+        <span>{currentIdx + 1} / {total}</span>
+        <span>⏰ {timer}초</span>
+      </div>
+    </div>
+  );
+}
 
 function MultiPlay() {
   const { roomId } = useParams();
@@ -11,8 +29,7 @@ function MultiPlay() {
   const socketRef = useRef(null);
   const [roomInfo, setRoomInfo] = useState(null);
   const [quizInfo, setQuizInfo] = useState(null);
-
-  const [playerScores, setPlayerScores] = useState([]); // [{ name, score }]
+  const [playerScores, setPlayerScores] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [chatMessages, setChatMessages] = useState([]);
   const chatEndRef = useRef(null);
@@ -20,71 +37,35 @@ function MultiPlay() {
   // 문제 관련 state
   const [questions, setQuestions] = useState([]);
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [timer, setTimer] = useState(TIMER_DEFAULT);
+  const [timer, setTimer] = useState(20);
   const [isAnswered, setIsAnswered] = useState(false);
+  const [answeredUser, setAnsweredUser] = useState('');
+  const [answerType, setAnswerType] = useState('');
   const timerRef = useRef(null);
+
+  // 사운드 문제용
+  const [ytReady, setYtReady] = useState(false);
+  const [startTime, setStartTime] = useState(0);
+  const [player, setPlayer] = useState(null);
 
   const nickname = localStorage.getItem('nickname') || '익명';
 
-  // socket 연결 및 실시간 이벤트 처리
-  useEffect(() => {
-    const socket = io(import.meta.env.VITE_API_BASE_URL, {
-      transports: ['websocket'],
-      withCredentials: true
-    });
-    socketRef.current = socket;
-    socket.emit('join-room', { roomId, nickname });
-
-    socket.on('update-players', (list) => {
-      setPlayerScores(old => {
-        // 기존 점수 보존
-        return list.map(name => {
-          const prev = old.find(p => p.name === name);
-          return { name, score: prev?.score || 0 };
-        });
-      });
-    });
-
-    socket.on('receive-message', (msg) => {
-      setChatMessages(prev => [...prev, msg]);
-    });
-
-    // 정답 맞춘 사람/채점 결과 브로드캐스트
-    socket.on('multi-answer', ({ user, correct, nextIdx }) => {
-      setIsAnswered(true);
-      if (correct) {
-        setChatMessages(prev => [...prev, { user: '[SYSTEM]', text: `${user}님이 정답!` }]);
-        setPlayerScores(scores => scores.map(s =>
-          s.name === user ? { ...s, score: s.score + 1 } : s
-        ));
+  // 문제 중복 제거 및 랜덤화 (프론트)
+  function getUniqueQuestions(qs, count) {
+    const seen = new Set();
+    const unique = [];
+    for (let q of qs) {
+      const key = q.text_content + (q.media_url || '');
+      if (!seen.has(key)) {
+        unique.push(q);
+        seen.add(key);
+        if (unique.length === count) break;
       }
-      setTimeout(() => {
-        if (nextIdx !== undefined) {
-          setCurrentIdx(nextIdx);
-          setIsAnswered(false);
-          setTimer(TIMER_DEFAULT);
-        }
-      }, 1500);
-    });
+    }
+    return unique;
+  }
 
-    // 문제 동기화
-    socket.on('multi-sync-question', (idx) => {
-      setCurrentIdx(idx);
-      setIsAnswered(false);
-      setTimer(TIMER_DEFAULT);
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, [roomId, nickname]);
-
-  // 채팅 스크롤 자동 내리기
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages]);
-
-  // 방/퀴즈/문제 정보 가져오기
+  // 문제 불러오기(최상단 useEffect)
   useEffect(() => {
     fetch(`/api/room/${roomId}`)
       .then(res => res.json())
@@ -92,13 +73,12 @@ function MultiPlay() {
         setRoomInfo(data);
         const quizRes = await fetch(`/api/quiz/${data.quiz_id}`);
         const quizData = await quizRes.json();
-        setQuizInfo(quizData);
 
-        // 문제 랜덤 섞어서 10문제(또는 전체)로 제한
-        const qlist = (quizData.questions || [])
-          .filter(q => ['text', 'image', 'sound'].includes(q.type));
-        const shuffled = [...qlist].sort(() => 0.5 - Math.random());
-        setQuestions(shuffled.slice(0, 10));
+        // 문제 중복 제거 및 랜덤 추출
+        const allQuestions = (quizData.questions || []).filter(q => ['text', 'image', 'sound'].includes(q.type));
+        const shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
+        setQuestions(getUniqueQuestions(shuffled, 10)); // 10문제
+        setQuizInfo(quizData);
       });
   }, [roomId]);
 
@@ -119,6 +99,37 @@ function MultiPlay() {
     timerRef.current = setTimeout(() => setTimer(t => t - 1), 1000);
     return () => clearTimeout(timerRef.current);
   }, [timer, questions, currentIdx, isAnswered]);
+
+    useEffect(() => {
+    socketRef.current = io(import.meta.env.VITE_API_BASE_URL, { withCredentials: true });
+
+    socketRef.current.on('multi-answer', ({ user, correct, nextIdx, scores }) => {
+    setIsAnswered(true);
+    setAnsweredUser(user);
+    setAnswerType(correct ? 'correct' : 'wrong');
+    setPlayerScores(Object.entries(scores).map(([user, score]) => ({ user, score })));
+
+    if (nextIdx !== undefined) {
+        setTimeout(() => {
+        setCurrentIdx(nextIdx);
+        setIsAnswered(false);
+        setAnsweredUser('');
+        setAnswerType('');
+        setTimer(20);
+        }, 1500);
+    }
+    });
+
+
+    // ... 나머지 이벤트 리스너도 필요 시 연결
+    }, []);
+
+    useEffect(() => {
+    // 소켓 연결은 이미 되어 있음
+    socketRef.current.on('receive-message', (message) => {
+        setChatMessages(prev => [...prev, message]);
+    });
+    }, []);
 
   // 정답/채팅 입력 처리
   const handleSendMessage = () => {
@@ -150,14 +161,39 @@ function MultiPlay() {
     setChatInput('');
   };
 
+   // 사운드 문제 핸들링
+  const extractYouTubeId = (url) => {
+    const match = url?.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);
+    return match ? match[1] : '';
+  };
+
+  const onYtReady = (event) => {
+    // 유튜브 시작 시간 랜덤
+    const duration = event.target.getDuration();
+    let start = 0;
+    if (duration > 60) start = Math.floor(Math.random() * (duration - 30));
+    setStartTime(start);
+    event.target.seekTo(start);
+    event.target.playVideo();
+    setYtReady(true);
+    setPlayer(event.target);
+  };
+
   // 문제 렌더링
   const currentQ = questions[currentIdx];
 
   return (
     <Layout>
       <div style={{ width: '80%', backgroundColor: '#fff4e6', padding: '20px', borderRadius: '20px', margin: '0 auto' }}>
-        <div style={{ maxWidth: '1440px', margin: '0 auto', display: 'flex', gap: '20px' }}>
+        {/* 3. 퀴즈 정보/타이머 최상단 표시 */}
+        <QuizHeader
+          quizTitle={quizInfo?.title || ''}
+          currentIdx={currentIdx}
+          total={questions.length}
+          timer={timer}
+        />
 
+        <div style={{ maxWidth: '1440px', margin: '0 auto', display: 'flex', gap: '20px' }}>
           {/* 문제 + 채팅 */}
           <div style={{ flex: 3, display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* 문제 영역 */}
@@ -172,43 +208,57 @@ function MultiPlay() {
               alignItems: 'center',
               fontSize: '24px',
               fontWeight: 'bold',
-              textAlign: 'center'
+              textAlign: 'center',
+              position: 'relative'
             }}>
+              {/* 4. 정답자 메시지 */}
+              {isAnswered && answeredUser &&
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, right: 0, fontSize: 28,
+                  color: answerType === 'correct' ? 'green' : 'red', fontWeight: 'bold', marginTop: 12
+                }}>
+                  {`${answeredUser}님 정답!`}
+                </div>
+              }
               {!currentQ
                 ? '문제를 불러오는 중...'
                 : currentQ.type === 'image'
-                ? (
+                  ? (
                     <>
                       <img src={currentQ.media_url} alt="문제 이미지" style={{ maxHeight: '120px', marginBottom: '10px' }} />
                       <div>{currentQ.text_content}</div>
                     </>
                   )
-                : currentQ.type === 'sound'
-                ? (
-                    <>
-                      <div>🔊 사운드 문제 (미구현)</div>
+                  : currentQ.type === 'sound'
+                    ? (
+                      <>
+                        <YouTube
+                          videoId={extractYouTubeId(currentQ.media_url)}
+                          onReady={onYtReady}
+                          opts={{ height: '0', width: '0', playerVars: { autoplay: 1, controls: 0 } }}
+                        />
+                        <span
+                          onClick={() => player?.seekTo(startTime)}
+                          style={{ fontSize: '32px', cursor: 'pointer', marginBottom: '12px' }}
+                        >
+                          🔊
+                        </span>
+                        <div>{currentQ.text_content}</div>
+                      </>
+                    )
+                    : (
                       <div>{currentQ.text_content}</div>
-                    </>
-                  )
-                : (
-                    <div>{currentQ.text_content}</div>
-                  )
+                    )
               }
-              <div style={{ fontSize: 16, marginTop: 10, color: '#555' }}>
-                <span>문제 {currentIdx + 1} / {questions.length}</span>
-                {roomInfo?.use_timer && (
-                  <span style={{ marginLeft: 16 }}>⏰ {timer}초</span>
-                )}
-              </div>
             </div>
 
-            {/* 채팅창 */}
+            {/* 채팅창: 20% 증가 */}
             <div style={{
               backgroundColor: 'white',
               borderRadius: '12px',
               display: 'flex',
               flexDirection: 'column',
-              height: '112px', // 기존 대비 30% 축소
+              height: '162px', // (135px보다 약간 크게)
               overflow: 'hidden'
             }}>
               <div style={{
@@ -216,7 +266,7 @@ function MultiPlay() {
                 padding: '10px',
                 overflowY: 'auto',
                 fontSize: '14px',
-                textAlign: 'left', // ✅ 왼쪽 정렬
+                textAlign: 'left',
                 wordBreak: 'break-all'
               }}>
                 {chatMessages.map((msg, idx) => (
@@ -242,34 +292,36 @@ function MultiPlay() {
             </div>
           </div>
 
-          {/* 점수판 + 버튼 */}
-          <div style={{ width: '220px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    {/* 우측 점수판 + 버튼 */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{
-              backgroundColor: 'white',
-              borderRadius: '12px',
-              padding: '16px',
-              boxShadow: '0 0 6px rgba(0,0,0,0.1)'
+                backgroundColor: 'white',
+                borderRadius: '12px',
+                padding: '16px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                minHeight: '180px'
             }}>
-              <h3 style={{ textAlign: 'center', marginTop: 0 }}>현재 점수</h3>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {playerScores.map((player, idx) => (
-                  <li key={idx} style={{ marginBottom: '8px' }}>
-                    {player.name} - {player.score}점
-                  </li>
+                👥 참가자 점수
+                <ul style={{ marginTop: '12px', listStyle: 'none', padding: 0 }}>
+                {playerScores.map(({ user, score }) => (
+                    <li key={user} style={{ marginBottom: '6px' }}>
+                    {user}: {score}점
+                    </li>
                 ))}
-              </ul>
+                </ul>
             </div>
 
-            <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <button className="btn-orange">💡 힌트</button>
-              <button className="btn-orange">⏩ 스킵</button>
-              <button className="btn-orange" onClick={() => navigate('/')}>❌ 나가기</button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <button className="btn-orange">힌트</button>
+                <button className="btn-orange">스킵</button>
+                <button className="btn-gray" onClick={() => navigate('/')}>나가기</button>
             </div>
-          </div>
+            </div>
+
         </div>
       </div>
     </Layout>
   );
 }
-
 export default MultiPlay;
