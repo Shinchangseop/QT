@@ -82,8 +82,10 @@ function Room() {
     };
 
     const handleGameStarted = () => {
-        console.log('🎮 게임이 시작되었습니다!');
+    console.log('🎮 게임이 시작되었습니다!');
+    setTimeout(() => {
         navigate(`/multi/${roomId}`);
+    }, 300); // 🕒 300ms 지연
     };
 
     // ✅ 이벤트 리스너 등록
