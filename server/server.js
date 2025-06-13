@@ -7,6 +7,8 @@ const cors = require('cors');
 const path = require('path');
 const db = require('./db');
 
+const { getQuizById } = require('./quizController');
+
 // 라우터 불러오기
 const quizRoutes = require('./quizRoutes');
 const questionRoutes = require('./questionRoutes');
@@ -109,6 +111,7 @@ io.on('connection', (socket) => {
     // 본인 + 다른 참가자 모두에게 전송
     socket.emit('update-players', rooms[roomId]);
     socket.to(roomId).emit('update-players', rooms[roomId]);
+    socket.emit('init-scores', multiPlayState[roomId]?.scores || {});
     await broadcastRoomList();
   });
 
@@ -118,10 +121,60 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('receive-message', message);
   });
 
-  socket.on('start-game', ({ roomId }) => {
+  socket.on('start-game', async ({ roomId }) => {
     console.log(`🎮 ${roomId} 게임 시작`);
-    io.to(roomId).emit('game-started'); // 방 안 모든 유저에게 전달
+
+    const participants = rooms[roomId] || [];
+
+    // 상태 초기화
+    multiPlayState[roomId] = {
+      quiz_id: null,
+      questions: [],
+      answered: false,
+      scores: {}
+    };
+
+    // DB에서 퀴즈 ID 받아오기
+    const roomRes = await db.query('SELECT quiz_id FROM rooms WHERE id = $1', [roomId]);
+    const quizId = roomRes.rows[0]?.quiz_id;
+    if (!quizId) {
+      console.error('❌ 퀴즈 ID 불러오기 실패');
+      return;
+    }
+
+    multiPlayState[roomId].quiz_id = quizId;
+
+    const quizData = await getQuizById(quizId);
+    const allQuestions = quizData.questions.filter(q =>
+      ['text', 'image', 'sound'].includes(q.type)
+    );
+
+    const seen = new Set();
+    const unique = [];
+    for (let q of allQuestions.sort(() => 0.5 - Math.random())) {
+      const key = q.text_content + (q.media_url || '');
+      if (!seen.has(key)) {
+        unique.push(q);
+        seen.add(key);
+        if (unique.length >= 10) break;
+      }
+    }
+
+    multiPlayState[roomId].questions = unique;
+
+    // 점수 초기화
+    const initialScores = {};
+    participants.forEach(name => {
+      initialScores[name] = 0;
+    });
+    multiPlayState[roomId].scores = initialScores;
+
+    // 클라이언트 전송
+    io.to(roomId).emit('init-scores', initialScores);
+    io.to(roomId).emit('start-quiz', { questions: unique });
+    console.log(`✅ 문제 ${unique.length}개 전송됨`);
   });
+
 
   // ✅ 이 위치로 이동!
   socket.on('disconnecting', async () => {
@@ -153,15 +206,25 @@ io.on('connection', (socket) => {
 
     if (correct) {
       multiPlayState[roomId].answered = true;
-      // 점수 갱신
-      if (!multiPlayState[roomId].scores[user]) {
-        multiPlayState[roomId].scores[user] = 0;
+
+      if (user !== '[SYSTEM]') {
+        // 점수 초기화가 안 되어 있으면 0으로 설정
+        if (!multiPlayState[roomId].scores[user]) {
+          multiPlayState[roomId].scores[user] = 0;
+        }
+        multiPlayState[roomId].scores[user] += 1;
       }
-      multiPlayState[roomId].scores[user] += 1;
     }
 
+
     // 모두에게 정답 결과와 다음 문제 인덱스 브로드캐스트
-    io.to(roomId).emit('multi-answer', { user, correct, nextIdx });
+    io.to(roomId).emit('multi-answer', {
+      user,
+      correct,
+      nextIdx,
+      scores: multiPlayState[roomId].scores,
+    });
+
 
     // 다음 문제로 넘어갈 때 answered 플래그 리셋
     if (correct && nextIdx !== undefined) {

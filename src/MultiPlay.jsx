@@ -65,23 +65,6 @@ function MultiPlay() {
     return unique;
   }
 
-  // 문제 불러오기(최상단 useEffect)
-  useEffect(() => {
-    fetch(`/api/room/${roomId}`)
-      .then(res => res.json())
-      .then(async data => {
-        setRoomInfo(data);
-        const quizRes = await fetch(`/api/quiz/${data.quiz_id}`);
-        const quizData = await quizRes.json();
-
-        // 문제 중복 제거 및 랜덤 추출
-        const allQuestions = (quizData.questions || []).filter(q => ['text', 'image', 'sound'].includes(q.type));
-        const shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
-        setQuestions(getUniqueQuestions(shuffled, 10)); // 10문제
-        setQuizInfo(quizData);
-      });
-  }, [roomId]);
-
   // 타이머 카운트다운
   useEffect(() => {
     if (!questions[currentIdx] || isAnswered) return;
@@ -120,8 +103,6 @@ function MultiPlay() {
     }
     });
 
-
-    // ... 나머지 이벤트 리스너도 필요 시 연결
     }, []);
 
     useEffect(() => {
@@ -130,6 +111,59 @@ function MultiPlay() {
         setChatMessages(prev => [...prev, message]);
     });
     }, []);
+
+    useEffect(() => {
+    socketRef.current.on('init-scores', (scores) => {
+        setPlayerScores(Object.entries(scores).map(([user, score]) => ({ user, score })));
+    });
+    }, []);
+
+    useEffect(() => {
+    socketRef.current.on('start-quiz', ({ questions }) => {
+        setQuestions(questions);
+    });
+    }, []);
+
+    useEffect(() => {
+    socketRef.current.on('multi-sync-question', (nextIdx) => {
+        setCurrentIdx(nextIdx);
+        setIsAnswered(false);
+        setAnsweredUser('');
+        setAnswerType('');
+        setTimer(20);
+    });
+    }, []);
+
+    useEffect(() => {
+    socketRef.current.on('update-players', (players) => {
+        setPlayerScores((prevScores) => {
+        const updated = players.map(name => {
+            const existing = prevScores.find(p => p.user === name);
+            return { user: name, score: existing?.score ?? 0 };
+        });
+        return updated;
+        });
+    });
+    }, []);
+
+    useEffect(() => {
+    const fetchQuizInfo = async () => {
+        const res = await fetch(`/api/room/${roomId}`);
+        const data = await res.json();
+        setRoomInfo(data);
+
+        const quizRes = await fetch(`/api/quiz/${data.quiz_id}`);
+        const quiz = await quizRes.json();
+        setQuizInfo(quiz);
+    };
+    fetchQuizInfo();
+    }, [roomId]);
+
+    useEffect(() => {
+    if (chatEndRef.current) {
+        chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+    }, [chatMessages]);
 
   // 정답/채팅 입력 처리
   const handleSendMessage = () => {
@@ -315,7 +349,7 @@ function MultiPlay() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <button className="btn-orange">힌트</button>
                 <button className="btn-orange">스킵</button>
-                <button className="btn-gray" onClick={() => navigate('/')}>나가기</button>
+                <button className="btn-orange" onClick={() => navigate('/')}>나가기</button>
             </div>
             </div>
 
