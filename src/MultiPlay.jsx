@@ -168,6 +168,7 @@ useEffect(() => {
   const fetchRoomInfo = async () => {
     const res = await fetch(`/api/room/${roomId}`);
     const data = await res.json();
+    console.log("🎯 fetchRoomInfo result:", data);  // 🔍 추가
     setRoomInfo(data.room);
     setQuizInfo(data.quiz);
   };
@@ -248,7 +249,7 @@ useEffect(() => {
             marginBottom: '10px',
             textAlign: 'center'
         }}>
-            {roomInfo.title} | {quizInfo.title}
+            {roomInfo?.title || '대기실'} | {quizInfo?.title || '퀴즈'}
         </div>
         <QuizHeader
           quizTitle={quizInfo?.title || ''}
