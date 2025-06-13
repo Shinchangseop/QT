@@ -84,24 +84,25 @@ function MultiPlay() {
   }, [timer, questions, currentIdx, isAnswered]);
 
 useEffect(() => {
-    if (!socketRef.current) {
-        const socket = io(import.meta.env.VITE_API_BASE_URL, { withCredentials: true });
-        socketRef.current = socket;
-    }
-
+    socketRef.current = io(import.meta.env.VITE_API_BASE_URL, { withCredentials: true });
     const socket = socketRef.current;
 
-    socket.emit('join-room', { roomId, nickname });
-
     socket.on('start-quiz', ({ questions }) => {
-        console.log('[🔔 start-quiz 수신]', questions);
-        setQuestions(questions);
-        setCurrentIdx(0);
-        setIsAnswered(false);
-        setAnsweredUser('');
-        setAnswerType('');
-        setTimer(20);
+    console.log('[🔔 start-quiz 수신]', questions);
+    setQuestions(questions);
+    setCurrentIdx(0);
+    setIsAnswered(false);
+    setAnsweredUser('');
+    setAnswerType('');
+    setTimer(20);
     });
+
+    socket.on('connect', () => {
+        console.log('✅ MultiPlay connected:', socket.id);  // 🔍 이거 찍히는지 확인
+        socket.emit('join-room', { roomId, nickname });
+    });
+
+
 
   socket.on('multi-answer', ({ user, correct, nextIdx, scores }) => {
     setIsAnswered(true);
