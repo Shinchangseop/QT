@@ -89,15 +89,19 @@ useEffect(() => {
 
   socket.emit('join-room', { roomId, nickname });
 
-  socket.on('start-quiz', ({ questions }) => {
+    socket.on('start-quiz', ({ questions }) => {
     console.log('[🔔 start-quiz 수신]', questions);
+    if (!questions || questions.length === 0) {
+        console.error('❌ 문제 목록이 비어있습니다!');
+        return;
+    }
     setQuestions(questions);
     setCurrentIdx(0);
     setIsAnswered(false);
     setAnsweredUser('');
     setAnswerType('');
     setTimer(20);
-  });
+    });
 
   socket.on('multi-answer', ({ user, correct, nextIdx, scores }) => {
     setIsAnswered(true);
