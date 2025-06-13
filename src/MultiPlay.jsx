@@ -66,7 +66,7 @@ function MultiPlay() {
   }
 
   // 타이머 카운트다운
-  useEffect(() => {
+useEffect(() => {
     if (!questions[currentIdx] || isAnswered) return;
     if (timer === 0) {
       setIsAnswered(true);
@@ -101,18 +101,6 @@ useEffect(() => {
         console.log('✅ MultiPlay connected:', socket.id);  // 🔍 이거 찍히는지 확인
         socket.emit('join-room', { roomId, nickname });
     });
-    
-useEffect(() => {
-  const fetchRoomInfo = async () => {
-    const res = await fetch(`/api/room/${roomId}`);
-    const data = await res.json();
-    setRoomInfo(data.room);
-    setQuizInfo(data.quiz);
-  };
-  fetchRoomInfo();
-}, [roomId]);
-
-
 
   socket.on('multi-answer', ({ user, correct, nextIdx, scores }) => {
     setIsAnswered(true);
@@ -134,12 +122,6 @@ useEffect(() => {
   socket.on('receive-message', (message) => {
     setChatMessages(prev => [...prev, message]);
   });
-
-    useEffect(() => {
-    if (chatEndRef.current) {
-        chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-    }, [chatMessages]);
 
   socket.on('init-scores', (scores) => {
     setPlayerScores(Object.entries(scores).map(([user, score]) => ({ user, score })));
@@ -169,6 +151,21 @@ useEffect(() => {
   };
 }, [roomId, nickname]);
 
+useEffect(() => {
+  const fetchRoomInfo = async () => {
+    const res = await fetch(`/api/room/${roomId}`);
+    const data = await res.json();
+    setRoomInfo(data.room);
+    setQuizInfo(data.quiz);
+  };
+  fetchRoomInfo();
+}, [roomId]);
+
+useEffect(() => {
+    if (chatEndRef.current) {
+        chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+    }, [chatMessages]);
 
   // 정답/채팅 입력 처리
   const handleSendMessage = () => {
