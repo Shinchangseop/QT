@@ -223,6 +223,13 @@ io.on('connection', (socket) => {
       }
     }
 
+    if (nextIdx === undefined) {
+    io.to(roomId).emit('game-over', {
+      roomId,
+      scores: multiPlayState[roomId].scores
+    });
+  }
+
 
     // 모두에게 정답 결과와 다음 문제 인덱스 브로드캐스트
     io.to(roomId).emit('multi-answer', {

@@ -181,6 +181,19 @@ useEffect(() => {
     }
     }, [chatMessages]);
 
+useEffect(() => {
+  const socket = socketRef.current;
+
+  socket.on('game-over', ({ results, roomId }) => {
+    console.log('🛑 게임 종료!', results);
+    navigate('/multiscore', { state: { results, roomId } });
+  });
+
+  return () => {
+    socket.off('game-over');
+  };
+}, [navigate]);
+
   // 정답/채팅 입력 처리
   const handleSendMessage = () => {
     const trimmed = chatInput.trim();
@@ -277,22 +290,6 @@ useEffect(() => {
               position: 'relative'
             }}>
               {/* 정답자 메시지 */}
-                {isAnswered && (
-                <div style={{
-                    position: 'absolute',
-                    top: '8px',
-                    left: 0,
-                    right: 0,
-                    textAlign: 'center',
-                    fontSize: answeredUser === '[SYSTEM]' ? '20px' : '28px',
-                    fontWeight: 'bold',
-                    color: answerType === 'correct' ? 'green' : 'red'
-                }}>
-                    {answeredUser === '[SYSTEM]'
-                    ? <>전원 오답!<br /><span style={{ fontSize: '18px' }}>정답: {questions[currentIdx]?.answer}</span></>
-                    : `${answeredUser}님 정답!`}
-                </div>
-                )}
               {!currentQ
                 ? '문제를 불러오는 중...'
                 : isAnswered ? (
