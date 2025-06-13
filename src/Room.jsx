@@ -104,7 +104,7 @@ function Room() {
   if (!socketRef.current) return;
 
   // 1. 서버에 'start-game' 이벤트 전파
-  socket.emit('start-game', { roomId });
+  socketRef.current.emit('start-game', { roomId });
 
   // 2. 방장은 바로 게임 화면으로 이동
   navigate(`/multi/${roomId}`);
