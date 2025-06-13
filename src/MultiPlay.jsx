@@ -120,7 +120,13 @@ function MultiPlay() {
 
     useEffect(() => {
     socketRef.current.on('start-quiz', ({ questions }) => {
-        setQuestions(questions);
+    console.log('🧪 questions:', questions);
+    setQuestions(questions);
+    setCurrentIdx(0); // 문제 첫 번째부터 시작!
+    setIsAnswered(false);
+    setAnsweredUser('');
+    setAnswerType('');
+    setTimer(20);
     });
     }, []);
 
