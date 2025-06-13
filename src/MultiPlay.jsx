@@ -4,6 +4,16 @@ import { io } from 'socket.io-client';
 import YouTube from 'react-youtube';
 import Layout from './Layout';
 
+import bellSound from "./assets/sound/bell.mp3";
+import countdown10Sound from "./assets/sound/countdown10.wav";
+import FAILSound from "./assets/sound/FAIL.MP3";
+import SUCCESSSound from "./assets/sound/SUCCESS.mp3";
+import SCORE_ALARMSound from "./assets/sound/SCORE_ALARM.mp3";
+
+const successAudio = useRef(new Audio(SUCCESSSound));
+const failAudio = useRef(new Audio(FAILSound));
+const wrongAudio = useRef(new Audio(SCORE_ALARMSound));
+
 // 퀴즈 정보 영역 렌더
 function QuizHeader({ quizTitle, currentIdx, total, timer }) {
   return (
@@ -70,6 +80,7 @@ useEffect(() => {
     if (!questions[currentIdx] || isAnswered) return;
     if (timer === 0) {
       setIsAnswered(true);
+    failAudio.current.play(); // 실패 사운드
       socketRef.current?.emit('multi-answer', {
         roomId,
         user: '[SYSTEM]',
@@ -179,6 +190,7 @@ useEffect(() => {
 
       if (isCorrect) {
         // 서버에 "내가 정답자!" 알림
+          successAudio.current.play(); // 정답 사운드
         socketRef.current.emit('multi-answer', {
           roomId,
           user: nickname,
@@ -227,16 +239,14 @@ useEffect(() => {
     <Layout>
       <div style={{ width: '80%', backgroundColor: '#fff4e6', padding: '20px', borderRadius: '20px', margin: '0 auto' }}>
         {/* 3. 퀴즈 정보/타이머 최상단 표시 */}
-        {roomInfo?.title && quizInfo?.title && (
-            <div style={{
-                fontSize: '20px',
-                fontWeight: 'bold',
-                marginBottom: '10px',
-                textAlign: 'center'
-            }}>
-                {roomInfo.title} | {quizInfo.title}
-            </div>
-        )}
+        <div style={{
+            fontSize: '20px',
+            fontWeight: 'bold',
+            marginBottom: '10px',
+            textAlign: 'center'
+        }}>
+            {roomInfo.title} | {quizInfo.title}
+        </div>
         <QuizHeader
           quizTitle={quizInfo?.title || ''}
           currentIdx={currentIdx}
@@ -281,34 +291,37 @@ useEffect(() => {
                 )}
               {!currentQ
                 ? '문제를 불러오는 중...'
-                : currentQ.type === 'image'
-                  ? (
+                : isAnswered ? (
+                    <div style={{ fontSize: answeredUser === '[SYSTEM]' ? '22px' : '28px', color: answerType === 'correct' ? 'green' : 'red' }}>
+                        {answeredUser === '[SYSTEM]'
+                        ? <>전원 오답!<br /><span style={{ fontSize: '18px' }}>정답: {currentQ.answer}</span></>
+                        : `${answeredUser}님 정답!`}
+                    </div>
+                    ) : currentQ.type === 'image' ? (
                     <>
-                      <img src={currentQ.media_url} alt="문제 이미지" style={{ maxHeight: '120px', marginBottom: '10px' }} />
-                      <div>{currentQ.text_content}</div>
+                        <img src={currentQ.media_url} alt="문제 이미지" style={{ maxHeight: '120px', marginBottom: '10px' }} />
+                        <div>{currentQ.text_content}</div>
                     </>
-                  )
-                  : currentQ.type === 'sound'
-                    ? (
-                      <>
+                    ) : currentQ.type === 'sound' ? (
+                    <>
                         <YouTube
-                          videoId={extractYouTubeId(currentQ.media_url)}
-                          onReady={onYtReady}
-                          opts={{ height: '0', width: '0', playerVars: { autoplay: 1, controls: 0 } }}
+                        videoId={extractYouTubeId(currentQ.media_url)}
+                        onReady={onYtReady}
+                        opts={{ height: '0', width: '0', playerVars: { autoplay: 1, controls: 0 } }}
                         />
                         <span
-                          onClick={() => player?.seekTo(startTime)}
-                          style={{ fontSize: '32px', cursor: 'pointer', marginBottom: '12px' }}
+                        onClick={() => player?.seekTo(startTime)}
+                        style={{ fontSize: '32px', cursor: 'pointer', marginBottom: '12px' }}
                         >
-                          🔊
+                        🔊
                         </span>
                         <div>{currentQ.text_content}</div>
-                      </>
+                    </>
+                    ) : (
+                    <div>{currentQ.text_content}</div>
                     )
-                    : (
-                      <div>{currentQ.text_content}</div>
-                    )
-              }
+                }
+
             </div>
 
             {/* 채팅창: 20% 증가 */}
