@@ -112,6 +112,12 @@ io.on('connection', (socket) => {
     socket.emit('update-players', rooms[roomId]);
     socket.to(roomId).emit('update-players', rooms[roomId]);
     socket.emit('init-scores', multiPlayState[roomId]?.scores || {});
+
+    if (multiPlayState[roomId]?.questions?.length > 0) {
+      socket.emit('start-quiz', { questions: multiPlayState[roomId].questions });
+      socket.emit('game-started');
+    }
+
     await broadcastRoomList();
   });
 
