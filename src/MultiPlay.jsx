@@ -84,106 +84,70 @@ function MultiPlay() {
   }, [timer, questions, currentIdx, isAnswered]);
 
 useEffect(() => {
-    socketRef.current = io(import.meta.env.VITE_API_BASE_URL, { withCredentials: true });
+  const socket = io(import.meta.env.VITE_API_BASE_URL, { withCredentials: true });
+  socketRef.current = socket;
 
-    socketRef.current.emit('join-room', { roomId, nickname });
+  socket.emit('join-room', { roomId, nickname });
 
-      // ✅ 이벤트 리스너는 여기서 한 번에 모두 등록
-    socketRef.current.on('start-quiz', ({ questions }) => {
-        console.log('[🔔 start-quiz 수신]', questions);
-        setQuestions(questions);
-        setCurrentIdx(0);
-        setIsAnswered(false);
-        setAnsweredUser('');
-        setAnswerType('');
-        setTimer(20);
-    });
+  socket.on('start-quiz', ({ questions }) => {
+    console.log('[🔔 start-quiz 수신]', questions);
+    setQuestions(questions);
+    setCurrentIdx(0);
+    setIsAnswered(false);
+    setAnsweredUser('');
+    setAnswerType('');
+    setTimer(20);
+  });
 
-    socketRef.current.on('multi-answer', ({ user, correct, nextIdx, scores }) => {
+  socket.on('multi-answer', ({ user, correct, nextIdx, scores }) => {
     setIsAnswered(true);
     setAnsweredUser(user);
     setAnswerType(correct ? 'correct' : 'wrong');
     setPlayerScores(Object.entries(scores).map(([user, score]) => ({ user, score })));
+
     if (nextIdx !== undefined) {
-    setTimeout(() => {
+      setTimeout(() => {
         setCurrentIdx(nextIdx);
         setIsAnswered(false);
         setAnsweredUser('');
         setAnswerType('');
         setTimer(20);
-    }, 1500);
+      }, 1500);
     }
+  });
+
+  socket.on('receive-message', (message) => {
+    setChatMessages(prev => [...prev, message]);
+  });
+
+  socket.on('init-scores', (scores) => {
+    setPlayerScores(Object.entries(scores).map(([user, score]) => ({ user, score })));
+  });
+
+  socket.on('multi-sync-question', (nextIdx) => {
+    setCurrentIdx(nextIdx);
+    setIsAnswered(false);
+    setAnsweredUser('');
+    setAnswerType('');
+    setTimer(20);
+  });
+
+  socket.on('update-players', (players) => {
+    setPlayerScores((prevScores) => {
+      const updated = players.map(name => {
+        const existing = prevScores.find(p => p.user === name);
+        return { user: name, score: existing?.score ?? 0 };
+      });
+      return updated;
     });
+  });
 
-    }, []);
+  return () => {
+    socket.disconnect();
+    socketRef.current = null;
+  };
+}, [roomId, nickname]);
 
-    useEffect(() => {
-    // 소켓 연결은 이미 되어 있음
-    socketRef.current.on('receive-message', (message) => {
-        setChatMessages(prev => [...prev, message]);
-    });
-    }, []);
-
-    useEffect(() => {
-    socketRef.current.on('init-scores', (scores) => {
-        setPlayerScores(Object.entries(scores).map(([user, score]) => ({ user, score })));
-    });
-    }, []);
-
-    useEffect(() => {
-    socketRef.current.on('multi-sync-question', (nextIdx) => {
-        setCurrentIdx(nextIdx);
-        setIsAnswered(false);
-        setAnsweredUser('');
-        setAnswerType('');
-        setTimer(20);
-    });
-    }, []);
-
-    useEffect(() => {
-    socketRef.current.on('update-players', (players) => {
-        setPlayerScores((prevScores) => {
-        const updated = players.map(name => {
-            const existing = prevScores.find(p => p.user === name);
-            return { user: name, score: existing?.score ?? 0 };
-        });
-        return updated;
-        });
-    });
-    }, []);
-
-    useEffect(() => {
-    const fetchQuizInfo = async () => {
-        const res = await fetch(`/api/room/${roomId}`);
-        const data = await res.json();
-        setRoomInfo(data);
-
-        const quizRes = await fetch(`/api/quiz/${data.quiz_id}`);
-        const quiz = await quizRes.json();
-        setQuizInfo(quiz);
-    };
-    fetchQuizInfo();
-    }, [roomId]);
-
-    useEffect(() => {
-    if (chatEndRef.current) {
-        chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-    }, [chatMessages]);
-
-    useEffect(() => {
-    // 소켓 연결
-    socketRef.current = io(import.meta.env.VITE_API_BASE_URL, { withCredentials: true });
-
-    // 방 입장
-    socketRef.current.emit('join-room', { roomId, nickname });
-
-    return () => {
-        // 💡 페이지 벗어날 때 소켓 정리
-        socketRef.current.disconnect();
-        socketRef.current = null;
-    };
-    }, []);
 
   // 정답/채팅 입력 처리
   const handleSendMessage = () => {
