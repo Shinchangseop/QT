@@ -171,6 +171,20 @@ useEffect(() => {
     }
     }, [chatMessages]);
 
+    useEffect(() => {
+    // 소켓 연결
+    socketRef.current = io(import.meta.env.VITE_API_BASE_URL, { withCredentials: true });
+
+    // 방 입장
+    socketRef.current.emit('join-room', { roomId, nickname });
+
+    return () => {
+        // 💡 페이지 벗어날 때 소켓 정리
+        socketRef.current.disconnect();
+        socketRef.current = null;
+    };
+    }, []);
+
   // 정답/채팅 입력 처리
   const handleSendMessage = () => {
     const trimmed = chatInput.trim();
@@ -191,12 +205,17 @@ useEffect(() => {
           nextIdx: currentIdx + 1 < questions.length ? currentIdx + 1 : undefined
         });
       } else {
-        setChatMessages(prev => [...prev, { user: nickname, text: trimmed }]);
+        socketRef.current.emit('send-message', {
+            roomId,
+            message: { user: nickname, text: trimmed }
+        });
       }
     } else {
       // 그냥 채팅
-      setChatMessages(prev => [...prev, { user: nickname, text: trimmed }]);
-      socketRef.current?.emit('send-message', { roomId, message: { user: nickname, text: trimmed } });
+      socketRef.current.emit('send-message', {
+        roomId,
+        message: { user: nickname, text: trimmed }
+        });
     }
     setChatInput('');
   };
