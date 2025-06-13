@@ -83,23 +83,35 @@ function MultiPlay() {
     return () => clearTimeout(timerRef.current);
   }, [timer, questions, currentIdx, isAnswered]);
 
-    useEffect(() => {
+useEffect(() => {
     socketRef.current = io(import.meta.env.VITE_API_BASE_URL, { withCredentials: true });
+
+    socketRef.current.emit('join-room', { roomId, nickname });
+
+      // ✅ 이벤트 리스너는 여기서 한 번에 모두 등록
+    socketRef.current.on('start-quiz', ({ questions }) => {
+        console.log('[🔔 start-quiz 수신]', questions);
+        setQuestions(questions);
+        setCurrentIdx(0);
+        setIsAnswered(false);
+        setAnsweredUser('');
+        setAnswerType('');
+        setTimer(20);
+    });
 
     socketRef.current.on('multi-answer', ({ user, correct, nextIdx, scores }) => {
     setIsAnswered(true);
     setAnsweredUser(user);
     setAnswerType(correct ? 'correct' : 'wrong');
     setPlayerScores(Object.entries(scores).map(([user, score]) => ({ user, score })));
-
     if (nextIdx !== undefined) {
-        setTimeout(() => {
+    setTimeout(() => {
         setCurrentIdx(nextIdx);
         setIsAnswered(false);
         setAnsweredUser('');
         setAnswerType('');
         setTimer(20);
-        }, 1500);
+    }, 1500);
     }
     });
 
@@ -115,18 +127,6 @@ function MultiPlay() {
     useEffect(() => {
     socketRef.current.on('init-scores', (scores) => {
         setPlayerScores(Object.entries(scores).map(([user, score]) => ({ user, score })));
-    });
-    }, []);
-
-    useEffect(() => {
-    socketRef.current.on('start-quiz', ({ questions }) => {
-    console.log('🧪 questions:', questions);
-    setQuestions(questions);
-    setCurrentIdx(0); // 문제 첫 번째부터 시작!
-    setIsAnswered(false);
-    setAnsweredUser('');
-    setAnswerType('');
-    setTimer(20);
     });
     }, []);
 
