@@ -176,6 +176,21 @@ useEffect(() => {
 }, [roomId]);
 
 useEffect(() => {
+  const allowAudio = () => {
+    if (player) {
+      player.playVideo(); // 사용자가 클릭하면 유튜브 재생 가능해짐
+    }
+    window.removeEventListener('click', allowAudio);
+  };
+
+  window.addEventListener('click', allowAudio);
+
+  return () => {
+    window.removeEventListener('click', allowAudio);
+  };
+}, [player]);
+
+useEffect(() => {
     if (chatEndRef.current) {
         chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
@@ -238,13 +253,12 @@ useEffect(() => {
   };
 
   const onYtReady = (event) => {
-    // 유튜브 시작 시간 랜덤
     const duration = event.target.getDuration();
     let start = 0;
     if (duration > 60) start = Math.floor(Math.random() * (duration - 30));
     setStartTime(start);
     event.target.seekTo(start);
-    event.target.playVideo();
+    event.target.playVideo(); // 여기서도 재생 시도
     setYtReady(true);
     setPlayer(event.target);
   };
@@ -305,32 +319,17 @@ useEffect(() => {
                     </>
                     ) : currentQ.type === 'sound' ? (
                     <>
-                      <YouTube
+                        <YouTube
                         videoId={extractYouTubeId(currentQ.media_url)}
                         onReady={onYtReady}
-                        opts={{
-                          height: '1',         // 완전히 숨기지 말고 아주 작게
-                          width: '1',
-                          playerVars: {
-                            autoplay: 1,
-                            controls: 0,
-                            mute: 1            // 자동 재생 허용을 위해 mute
-                          }
-                        }}
-                      />
-
-                      <span
-                        onClick={() => {
-                          if (player) {
-                            player.unMute();         // 음소거 해제
-                            player.seekTo(startTime);
-                            player.playVideo();      // 재생 보장
-                          }
-                        }}
+                        opts={{ height: '0', width: '0', playerVars: { autoplay: 1, controls: 0 } }}
+                        />
+                        <span
+                        onClick={() => player?.seekTo(startTime)}
                         style={{ fontSize: '32px', cursor: 'pointer', marginBottom: '12px' }}
-                      >
+                        >
                         🔊
-                      </span>
+                        </span>
                         <div>{currentQ.text_content}</div>
                     </>
                     ) : (
