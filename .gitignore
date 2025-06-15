@@ -23,5 +23,16 @@ dist-ssr
 *.sln
 *.sw?
 
+# firebase 관련
+.firebase/
+.firebaserc
+firebase.json
+
 # 환경 변수
 .env
+
+# 업로드된 파일은 무시
+server/uploads/*
+
+# uploads 폴더 자체는 유지
+!server/uploads/.gitkeep
