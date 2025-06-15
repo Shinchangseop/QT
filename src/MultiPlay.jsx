@@ -305,17 +305,32 @@ useEffect(() => {
                     </>
                     ) : currentQ.type === 'sound' ? (
                     <>
-                        <YouTube
+                      <YouTube
                         videoId={extractYouTubeId(currentQ.media_url)}
                         onReady={onYtReady}
-                        opts={{ height: '0', width: '0', playerVars: { autoplay: 1, controls: 0 } }}
-                        />
-                        <span
-                        onClick={() => player?.seekTo(startTime)}
+                        opts={{
+                          height: '1',         // 완전히 숨기지 말고 아주 작게
+                          width: '1',
+                          playerVars: {
+                            autoplay: 1,
+                            controls: 0,
+                            mute: 1            // 자동 재생 허용을 위해 mute
+                          }
+                        }}
+                      />
+
+                      <span
+                        onClick={() => {
+                          if (player) {
+                            player.unMute();         // 음소거 해제
+                            player.seekTo(startTime);
+                            player.playVideo();      // 재생 보장
+                          }
+                        }}
                         style={{ fontSize: '32px', cursor: 'pointer', marginBottom: '12px' }}
-                        >
+                      >
                         🔊
-                        </span>
+                      </span>
                         <div>{currentQ.text_content}</div>
                     </>
                     ) : (
