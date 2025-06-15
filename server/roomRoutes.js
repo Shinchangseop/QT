@@ -34,7 +34,7 @@ router.post('/create', async (req, res) => {
   }
 });
 
-// ✅ 활성화된 방 목록 조회 (rooms 객체 기반)
+// 활성화된 방 목록 조회
 const roomsMemory = require('./rooms');
 
 router.get('/active', async (req, res) => {
@@ -66,7 +66,7 @@ router.get('/active', async (req, res) => {
 
 
 
-// ✅ GET /api/room/:roomId
+// GET /api/room/:roomId
 router.get('/:roomId', async (req, res) => {
   const { roomId } = req.params;
   try {

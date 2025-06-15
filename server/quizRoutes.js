@@ -3,10 +3,10 @@ const router = express.Router();
 const { addQuiz } = require('./quizController');
 const db = require('./db');
 
-// ✅ 퀴즈 추가
+// 퀴즈 추가
 router.post('/add', addQuiz);
 
-// ✅ 퀴즈 삭제
+// 퀴즈 삭제
 router.delete('/delete/:quiz_id', async (req, res) => {
   const quizId = req.params.quiz_id;
 
@@ -15,14 +15,14 @@ router.delete('/delete/:quiz_id', async (req, res) => {
     await db.query('DELETE FROM "Quiz" WHERE quiz_id = $1', [quizId]);
     res.status(200).json({ message: '삭제 성공' });
   } catch (err) {
-    console.error('❌ 삭제 실패:', err.message);
+    console.error('삭제 실패:', err.message);
     res.status(500).json({ error: '삭제 중 오류 발생', detail: err.message });
   }
 });
 
 router.get('/list/paged', async (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const keyword = req.query.keyword || ''; // 🔍 추가
+  const keyword = req.query.keyword || '';
   const limit = 12;
   const offset = (page - 1) * limit;
 
@@ -59,14 +59,14 @@ router.get('/list/paged', async (req, res) => {
     res.json({ quizzes: result.rows, totalPages: Math.ceil(total / limit) });
 
   } catch (err) {
-    console.error('❌ 퀴즈 목록 불러오기 실패:', err.message);
+    console.error('퀴즈 목록 불러오기 실패:', err.message);
     res.status(500).json({ error: '퀴즈 불러오기 실패' });
   }
 });
 
 
 
-// ✅ 관리자용 전체 퀴즈 목록
+// 관리자용 퀴즈 목록
 router.get('/list/all', async (req, res) => {
   try {
     const result = await db.query(`
@@ -81,14 +81,14 @@ router.get('/list/all', async (req, res) => {
     `);
     res.json(result.rows);
   } catch (err) {
-    console.error('❌ 전체 퀴즈 조회 실패:', err);
+    console.error('전체 퀴즈 조회 실패:', err);
     res.status(500).json({ error: '전체 퀴즈 조회 실패' });
   }
 });
 
   
 
-// ✅ 퀴즈 목록 조회 (경로 우선!)
+// 퀴즈 목록 조회
 router.get('/list/:user_id', async (req, res) => {
   const userId = req.params.user_id;
   try {
@@ -96,8 +96,8 @@ router.get('/list/:user_id', async (req, res) => {
       `SELECT q.quiz_id,
        q.title,
        MAX(q.created_at) AS updated_at,
-       u.username AS author,  -- ✅ 제작자 추가
-       COUNT(que.question_id) AS total_questions, -- ✅ 총 문제 수
+       u.username AS author,
+       COUNT(que.question_id) AS total_questions,
        COUNT(CASE WHEN que.type = 'text' THEN 1 END) AS text_count,
        COUNT(CASE WHEN que.type = 'image' THEN 1 END) AS image_count,
        COUNT(CASE WHEN que.type = 'sound' THEN 1 END) AS sound_count
@@ -112,12 +112,11 @@ router.get('/list/:user_id', async (req, res) => {
     );
     res.json(result.rows);
   } catch (err) {
-    console.error('❌ 퀴즈 목록 조회 실패:', err);
+    console.error('퀴즈 목록 조회 실패:', err);
     res.status(500).json({ error: '퀴즈 목록 조회 실패' });
   }
 });
 
-// ✅ 특정 퀴즈의 질문만 가져오는 라우트 추가
 router.get('/:quiz_id/questions', async (req, res) => {
     const quizId = req.params.quiz_id;
   
@@ -131,13 +130,12 @@ router.get('/:quiz_id/questions', async (req, res) => {
   
       res.json(questionRes.rows);
     } catch (err) {
-      console.error('❌ 질문 불러오기 실패:', err.message);
+      console.error('질문 불러오기 실패:', err.message);
       res.status(500).json({ error: '질문 로딩 실패' });
     }
   });
   
-
-// ✅ 퀴즈 단일 조회 (항상 마지막에!)
+// 퀴즈 단일 조회
 router.get('/:quiz_id', async (req, res) => {
   const quizId = req.params.quiz_id;
 
@@ -163,7 +161,7 @@ router.get('/:quiz_id', async (req, res) => {
   }
 });
 
-// ✅ 퀴즈 결과 저장
+// 퀴즈 결과 저장
 router.post('/result/save', async (req, res) => {
   const {
     user_id,
@@ -196,7 +194,7 @@ router.post('/result/save', async (req, res) => {
 
     res.status(200).json({ message: '결과 저장 성공' });
   } catch (err) {
-    console.error('❌ 결과 저장 실패:', err.message);
+    console.error('결과 저장 실패:', err.message);
     res.status(500).json({ error: '결과 저장 실패' });
   }
 });

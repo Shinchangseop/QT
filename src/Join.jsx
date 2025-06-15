@@ -35,7 +35,7 @@ function Join() {
     const found = quizList.find(q => q.quiz_id === selectedQuizId);
     if (found) {
       setSelectedQuiz(found);
-      setQuestionCount(found.total_questions);  // ← 이거 추가
+      setQuestionCount(found.total_questions); 
     }
   }, [selectedQuizId, quizList]);
 
@@ -46,13 +46,13 @@ function Join() {
         if (Array.isArray(data)) {
           setActiveRooms(data);
         } else {
-          console.error('⚠️ 비정상 데이터:', data);
+          console.error('비정상 데이터:', data);
           setActiveRooms([]);
         }
       })
       .catch(err => {
-        console.error('❌ 활성 대기실 목록 불러오기 실패:', err);
-        setActiveRooms([]); // fallback
+        console.error('활성 대기실 목록 불러오기 실패:', err);
+        setActiveRooms([]);
       });
   }, []);
 
@@ -76,7 +76,7 @@ useEffect(() => {
   }
 };
 
-/* 
+/* 더미 데이터
   const dummyRooms = [
   {
     id: 1,
@@ -116,7 +116,6 @@ useEffect(() => {
       .then(data => {
         let list = data.quizzes || data;
 
-        // ✅ 클라이언트 필터링
         if (isMine && searchKeyword) {
           const lower = searchKeyword.toLowerCase();
           list = list.filter(q => q.title.toLowerCase().includes(lower));
@@ -126,7 +125,7 @@ useEffect(() => {
         if (data.totalPages) setTotalPages(data.totalPages);
       })
       .catch(err => {
-        console.error('❌ 퀴즈 목록 불러오기 실패:', err);
+        console.error('퀴즈 목록 불러오기 실패:', err);
       });
 
   }, [showModal, currentPage, quizTab, searchKeyword]);
@@ -148,8 +147,8 @@ useEffect(() => {
         {/* 좌측 상단 버튼 */}
         <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '20px' }}>
           <button className="btn-orange" onClick={() => {
-            setCurrentPage(1);     // 페이지 초기화
-            setModalStep(1);       // 모달 스텝 초기화
+            setCurrentPage(1);  
+            setModalStep(1);       
             setSelectedQuizId(null);
             setShowModal(true);
           }}>
@@ -168,8 +167,6 @@ useEffect(() => {
             👥 대기실 생성
           </button>
         </div>
-
-        {/* 대기실 카드 2x4 */}
         <div style={{
           backgroundColor: '#fff4e6',
           borderRadius: '20px',
@@ -269,7 +266,7 @@ useEffect(() => {
               placeholder="검색"
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
-              onKeyDown={handleEnterKey}   // ✅ 추가
+              onKeyDown={handleEnterKey} 
               style={{
                 border: '1px solid #aaa',
                 borderRadius: '6px',
@@ -321,7 +318,7 @@ useEffect(() => {
           placeholder="검색"
           value={searchKeyword}
           onChange={(e) => setSearchKeyword(e.target.value)}
-          onKeyDown={handleEnterKey}   // ✅ 추가
+          onKeyDown={handleEnterKey}
           style={{
             border: '1px solid #aaa',
             borderRadius: '6px',
@@ -382,7 +379,7 @@ useEffect(() => {
   </div>
 )}
 
-      {/* Step 2: 퀴즈 설정 */}
+      {/* 퀴즈 설정 */}
       {showModal && modalStep === 2 && selectedQuiz && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -467,7 +464,7 @@ useEffect(() => {
         </div>
       )}
 
-      {/* Step 3: 대기실 설정 */}
+      {/* 대기실 설정 */}
       {showModal && modalStep === 'create-room-1' && (
   <div className="modal-overlay" onClick={() => setShowModal(false)}>
     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -582,7 +579,7 @@ useEffect(() => {
   </div>
 )}
 
-      {/* Step 4: 퀴즈 설정 */}
+      {/* 퀴즈 설정 */}
       {showModal && modalStep === 'create-room-2' && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -733,7 +730,7 @@ useEffect(() => {
                     questionCount: questionCount,
                     useHint: useHint,
                     useDefaultTime: useDefaultTime,
-                    createdBy: nickname // 또는 userId
+                    createdBy: nickname
                   };
 
                   try {

@@ -1,4 +1,3 @@
-// src/Login.jsx
 import React from 'react';
 
 function Login() {

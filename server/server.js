@@ -21,7 +21,7 @@ const server = http.createServer(app);
 
 const multiPlayState = {};
 
-// ✅ Socket.IO 설정
+// Socket.IO 설정
 const io = new Server(server, {
   cors: {
     origin: 'https://qtweb.xyz',
@@ -30,13 +30,13 @@ const io = new Server(server, {
   }
 });
 
-// ✅ 미들웨어
+// 미들웨어
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// ✅ 라우터 등록
+// 라우터 등록
 app.use('/api/quiz', quizRoutes);
 app.use('/api/question', questionRoutes);
 app.use('/api/upload', uploadRoutes);
@@ -44,7 +44,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/room', roomRoutes);
 
 
-// ✅ DB 테이블 생성
+// DB 테이블 생성
 async function ensureRoomsTable() {
   const createTableQuery = `
     CREATE TABLE IF NOT EXISTS rooms (
@@ -77,20 +77,20 @@ async function ensureRoomsTable() {
   try {
     await db.query(createTableQuery);
     await db.query(addColumnQuery);
-    console.log('✅ rooms 테이블 및 current_players 컬럼 확인 완료');
+    console.log('rooms 테이블 및 current_players 컬럼 확인 완료');
   } catch (err) {
-    console.error('❌ rooms 테이블 또는 컬럼 생성 실패:', err);
+    console.error('rooms 테이블 또는 컬럼 생성 실패:', err);
   }
 }
 
 
-// ✅ Socket.IO 연결 및 이벤트 처리
+// Socket.IO 연결 및 이벤트 처리
 const rooms = require('./rooms'); // { roomId: [nickname, nickname, ...] }
 
 
 
 io.on('connection', (socket) => {
-  console.log('🟢 새 유저 접속');
+  console.log('새 유저 접속');
 
   socket.on('join-room', async ({ roomId, nickname }) => {
     socket.nickname = nickname;
@@ -108,7 +108,6 @@ io.on('connection', (socket) => {
       );
     }
 
-    // 본인 + 다른 참가자 모두에게 전송
     socket.emit('update-players', rooms[roomId]);
     socket.to(roomId).emit('update-players', rooms[roomId]);
     socket.emit('init-scores', multiPlayState[roomId]?.scores || {});
@@ -123,7 +122,7 @@ io.on('connection', (socket) => {
 
 
   socket.on('send-message', ({ roomId, message }) => {
-    console.log(`📩 message from ${socket.nickname} to room ${roomId}:`, message);
+    console.log(`message from ${socket.nickname} to room ${roomId}:`, message);
     io.to(roomId).emit('receive-message', message);
   });
 
@@ -183,7 +182,6 @@ io.on('connection', (socket) => {
   });
 
 
-  // ✅ 이 위치로 이동!
   socket.on('disconnecting', async () => {
     const joinedRooms = Array.from(socket.rooms).filter(id => id !== socket.id);
     for (const roomId of joinedRooms) {
@@ -191,7 +189,6 @@ io.on('connection', (socket) => {
         rooms[roomId] = rooms[roomId].filter(n => n !== socket.nickname);
         io.to(roomId).emit('update-players', rooms[roomId]);
 
-        // ✅ DB 참가자 수 감소
         await db.query(
           'UPDATE rooms SET current_players = GREATEST(current_players - 1, 0) WHERE id = $1',
           [roomId]
@@ -230,12 +227,10 @@ io.on('connection', (socket) => {
 
     io.to(roomId).emit('game-over', {
       roomId,
-      results: sortedResults // ✅ 클라이언트에서 기대하는 이름
+      results: sortedResults
     });
   }
 
-
-    // 모두에게 정답 결과와 다음 문제 인덱스 브로드캐스트
     io.to(roomId).emit('multi-answer', {
       user,
       correct,
@@ -243,12 +238,9 @@ io.on('connection', (socket) => {
       scores: multiPlayState[roomId].scores,
     });
 
-
-    // 다음 문제로 넘어갈 때 answered 플래그 리셋
     if (correct && nextIdx !== undefined) {
       setTimeout(() => {
         multiPlayState[roomId].answered = false;
-        // 문제 인덱스 동기화
         io.to(roomId).emit('multi-sync-question', nextIdx);
       }, 1200);
     }
@@ -261,10 +253,10 @@ app.get('/api/room/active', async (req, res) => {
       .filter((roomId) => rooms[roomId].length > 0)
       .map((roomId) => Number(roomId));
 
-    console.log('🔍 activeRoomIds:', activeRoomIds);
+    console.log('activeRoomIds:', activeRoomIds);
 
     if (activeRoomIds.length === 0) {
-      console.log('ℹ️ No active rooms — returning empty list');
+      console.log('No active rooms — returning empty list');
       return res.json([]); // 빈 배열 응답
     }
 
@@ -290,10 +282,10 @@ app.get('/api/room/active', async (req, res) => {
       showContent: true
     }));
 
-    console.log('✅ room list sent:', result);
+    console.log('room list sent:', result);
     res.json(result);
   } catch (err) {
-    console.error('❌ 활성 대기실 불러오기 실패:', err.stack);
+    console.error('활성 대기실 불러오기 실패:', err.stack);
     res.status(500).json({ error: '서버 오류' });
   }
 });
@@ -301,9 +293,9 @@ app.get('/api/room/active', async (req, res) => {
 async function resetPlayerCounts() {
   try {
     await db.query('UPDATE rooms SET current_players = 0');
-    console.log('🔄 모든 방 current_players 초기화 완료');
+    console.log('모든 방 current_players 초기화 완료');
   } catch (err) {
-    console.error('❌ current_players 초기화 실패:', err);
+    console.error('current_players 초기화 실패:', err);
   }
 }
 
@@ -337,12 +329,11 @@ async function broadcastRoomList() {
 }
 
 
-// ✅ 서버 실행
 const port = 5000;
 ensureRoomsTable().then(async () => {
-  await resetPlayerCounts(); // 👈 여기에 삽입!
+  await resetPlayerCounts();
   server.listen(port, () => {
-    console.log(`🚀 서버 실행 중: http://localhost:${port}`);
+    console.log(`서버 실행 중: http://localhost:${port}`);
   });
 });
 

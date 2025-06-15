@@ -101,7 +101,7 @@ useEffect(() => {
     const socket = socketRef.current;
 
     socket.on('start-quiz', ({ questions }) => {
-    console.log('[🔔 start-quiz 수신]', questions);
+    console.log('[start-quiz 수신]', questions); // 디버그용
     setQuestions(questions);
     setCurrentIdx(0);
     setIsAnswered(false);
@@ -111,7 +111,7 @@ useEffect(() => {
     });
 
     socket.on('connect', () => {
-        console.log('✅ MultiPlay connected:', socket.id);  // 🔍 이거 찍히는지 확인
+        console.log('✅ MultiPlay connected:', socket.id);  // 디버그용
         socket.emit('join-room', { roomId, nickname });
     });
 
@@ -168,7 +168,7 @@ useEffect(() => {
   const fetchRoomInfo = async () => {
     const res = await fetch(`/api/room/${roomId}`);
     const data = await res.json();
-    console.log("🎯 fetchRoomInfo result:", data);  // 🔍 추가
+    console.log("🎯 fetchRoomInfo result:", data); 
     setRoomInfo(data.room);
     setQuizInfo(data.quiz);
   };
@@ -178,7 +178,7 @@ useEffect(() => {
 useEffect(() => {
   const allowAudio = () => {
     if (player) {
-      player.playVideo(); // 사용자가 클릭하면 유튜브 재생 가능해짐
+      player.playVideo(); 
     }
     window.removeEventListener('click', allowAudio);
   };
@@ -258,7 +258,7 @@ useEffect(() => {
     if (duration > 60) start = Math.floor(Math.random() * (duration - 30));
     setStartTime(start);
     event.target.seekTo(start);
-    event.target.playVideo(); // 여기서도 재생 시도
+    event.target.playVideo();
     setYtReady(true);
     setPlayer(event.target);
   };
@@ -339,13 +339,12 @@ useEffect(() => {
 
             </div>
 
-            {/* 채팅창: 20% 증가 */}
             <div style={{
               backgroundColor: 'white',
               borderRadius: '12px',
               display: 'flex',
               flexDirection: 'column',
-              height: '162px', // (135px보다 약간 크게)
+              height: '162px',
               overflow: 'hidden'
             }}>
               <div style={{
@@ -400,9 +399,9 @@ useEffect(() => {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <button className="btn-orange">힌트</button>
-                <button className="btn-orange">스킵</button>
-                <button className="btn-orange" onClick={() => navigate('/')}>나가기</button>
+                <button className="btn-orange">💡 힌트</button>
+                <button className="btn-orange">⏩ 스킵</button>
+                <button className="btn-orange" onClick={() => navigate('/')}>❌ 나가기</button>
             </div>
             </div>
 

@@ -21,7 +21,7 @@ function Signup() {
 
   const navigate = useNavigate();
 
-  // ✅ useGoogleLogin은 여기서 호출해야 정상 작동함!
+    // 구글 로그인
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
@@ -50,14 +50,14 @@ function Signup() {
         alert(`${name}님 환영합니다!`);
         navigate('/join');
       } catch (error) {
-        console.error('구글 로그인 처리 실패 ❌', error);
+        console.error('구글 로그인 처리 실패', error);
         alert('로그인 중 오류 발생');
       }
     },
-    onError: () => console.log('구글 로그인 실패 ❌'),
+    onError: () => console.log('구글 로그인 실패'),
   });
 
-  // ✅ 카카오 로그인
+  // 카카오 로그인
   useEffect(() => {
     if (window.Kakao && !window.Kakao.isInitialized()) {
       window.Kakao.init(import.meta.env.VITE_KAKAO_JS_KEY);
@@ -76,7 +76,7 @@ function Signup() {
     window.Kakao.Auth.login({
       scope: 'profile_nickname',
       success: function (authObj) {
-        console.log('카카오 로그인 성공 ✅', authObj);
+        console.log('카카오 로그인 성공', authObj);
 
         window.Kakao.API.request({
           url: '/v2/user/me',
@@ -102,7 +102,7 @@ function Signup() {
                 alert(`${nickname}님 반가워요!`);
                 navigate('/join');
               } catch (error) {
-                console.error('user_id 가져오기 실패 ❌', error);
+                console.error('user_id 가져오기 실패', error);
                 alert('로그인 중 오류가 발생했습니다.');
               }
             } else {
@@ -110,12 +110,12 @@ function Signup() {
             }
           },
           fail: function (error) {
-            console.error('사용자 정보 가져오기 실패 ❌', error);
+            console.error('사용자 정보 가져오기 실패', error);
           },
         });
       },
       fail: function (err) {
-        console.error('카카오 로그인 실패 ❌', err);
+        console.error('카카오 로그인 실패', err);
       },
     });
   };

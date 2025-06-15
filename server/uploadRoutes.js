@@ -10,15 +10,13 @@ const storage = multer.diskStorage({
     cb(null, 'uploads/');
   },
   filename: function (req, file, cb) {
-    // 업로드 시간 + 원래 확장자만 유지
     const ext = path.extname(file.originalname);
-    cb(null, Date.now() + ext); // 예: 1747197484652.png
+    cb(null, Date.now() + ext);
   }
 });
 
 const upload = multer({ storage });
 
-// POST /api/upload/image
 router.post('/image', upload.single('image'), (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: '이미지 업로드 실패' });

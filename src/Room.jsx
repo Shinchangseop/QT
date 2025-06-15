@@ -18,7 +18,7 @@ function Room() {
   const nickname = localStorage.getItem('nickname') || '익명';
     const isHost = roomInfo && nickname === roomInfo.created_by;
 
-  // 🔄 방 정보 및 퀴즈 정보 불러오기
+  // 방 정보 및 퀴즈 정보 불러오기
   useEffect(() => {
     fetch(`/api/room/${roomId}`)
       .then(res => res.json())
@@ -43,7 +43,7 @@ function Room() {
       });
   }, [roomId]);
 
-  // 🔄 채팅창 스크롤 아래로
+  // 채팅창 스크롤 아래로
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
@@ -85,10 +85,10 @@ function Room() {
     console.log('🎮 게임이 시작되었습니다!');
     setTimeout(() => {
         navigate(`/multi/${roomId}`);
-    }, 300); // 🕒 300ms 지연
+    }, 300); // 300ms 지연
     };
 
-    // ✅ 이벤트 리스너 등록
+    // 이벤트 리스너 등록
     socket.on('update-players', handlePlayerUpdate);
     socket.on('receive-message', handleChatMessage);
     socket.on('game-started', handleGameStarted);

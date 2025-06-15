@@ -58,7 +58,7 @@ const playSound = (file, ref = null) => {
   };
 
   const onReady = (event) => {
-    const duration = event.target.getDuration(); // 전체 길이 (초)
+    const duration = event.target.getDuration();
     let start = 0;
 
     if (duration < 60) {
@@ -88,7 +88,7 @@ useEffect(() => {
   if (!message) {
     setTimeout(() => {
       inputRef.current?.focus();
-    }, 0); // 렌더 완료 직후 실행
+    }, 0);
   }
 }, [message]);
 
@@ -122,9 +122,9 @@ useEffect(() => {
         bellAudioRef.current.pause();
         bellAudioRef.current.currentTime = 0;
         setAudioAllowed(true);
-        console.log('🔊 브라우저가 오디오 허용함');
+        console.log('브라우저가 오디오 허용함'); // 디버그용
       }).catch(e => {
-        console.warn('🔇 브라우저 오디오 허용 실패:', e.message);
+        console.warn('브라우저 오디오 허용 실패:', e.message);
       });
     }
 
@@ -142,17 +142,17 @@ useEffect(() => {
     fetch(`/api/quiz/${quizId}/questions`)
       .then(res => res.json())
       .then(data => {
-        console.log('📦 받아온 질문:', data);
+        console.log('📦 받아온 질문:', data); // 디버그용 추후 삭제
         const filtered = data.filter(q => q.type === 'text' || q.type === 'image' || q.type === 'sound');
         const shuffled = [...filtered].sort(() => 0.5 - Math.random());
         const limited = shuffled.slice(0, parseInt(count));
-        console.log('📦 최종 질문:', limited);
+        console.log('📦 최종 질문:', limited); // 디버그용 추후 삭제
         setQuestions(limited);
       });
   }, [quizId, count]);
 
   useEffect(() => {
-    if (introVisible) return; // 🎯 intro일 때는 타이머 금지
+    if (introVisible) return;
 
     if (time === 't' && timer > 0) {
       timerRef.current = setInterval(() => {
@@ -248,7 +248,7 @@ useEffect(() => {
       setMessageDetail('');
       setCurrentIndex(nextIndex);
 
-      // ✅ 입력창 자동 포커스
+      // 입력창 자동 포커스
       setTimeout(() => {
         inputRef.current?.focus();
       }, 0);
@@ -277,15 +277,15 @@ const handleSubmit = () => {
   const correct = answers.includes(rawInput);
 
   if (correct) {
-  stopCountdownSound(); // ✅ 이 줄 추가
+  stopCountdownSound();
   clearInterval(timerRef.current);
-  playSound(successSound); // ✅ 정답 효과음
+  playSound(successSound);
   const updated = { solved: score.solved + 1, correct: score.correct + 1, wrong: score.wrong };
   setScore(updated);
   showMessage('정답!', 'correct');
   setTimeout(() => goToNext(updated), 1500);
   }  else {
-    playSound(wrongSound); // ✅ 오답 효과음
+    playSound(wrongSound);
     showMessage('오답!', 'wrong');
   }
 };
@@ -311,7 +311,7 @@ const handleSubmit = () => {
   const navigateToScore = (finalScore) => {
     navigate('/single/score', {
       state: {
-        quizId, // ✅ 이거 추가
+        quizId,
         quizTitle,
         total: questions.length,
         score: finalScore,
@@ -354,7 +354,6 @@ const handleSubmit = () => {
       setMessage('');
       setMessageType('');
       setMessageDetail('');
-      // 메시지 사라진 후 포커싱
       setTimeout(() => {
         inputRef.current?.focus();
       }, 0);
@@ -422,7 +421,7 @@ const handleSubmit = () => {
                     </span>
                     <YouTube
                       videoId={extractYouTubeId(currentQuestion.media_url)}
-                      onReady={onReady} // 👈 함수 이름 확인
+                      onReady={onReady}
                       opts={{ height: '0', width: '0', playerVars: { autoplay: 1, controls: 0 } }}
                     />
 

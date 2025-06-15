@@ -28,7 +28,7 @@ function App() {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % images.length);
-    }, 6000); // ⏱️ 슬라이드 전환 간격을 6초로 늘림
+    }, 6000);
 
     return () => clearInterval(interval);
   }, []);
@@ -53,10 +53,6 @@ function App() {
             </div>
           </div>
         </div>
-
-
-
-
         <div className="right-login">
           {nickname ? (
             <button onClick={handleLogout} className="logout-btn">

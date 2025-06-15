@@ -3,7 +3,7 @@ const express = require('express');
 const client = require('./db');
 const router = express.Router();
 
-const fetch = require('node-fetch'); // 필요 시 설치: npm install node-fetch
+const fetch = require('node-fetch');
 
 router.post('/discord-login', async (req, res) => {
   const { code } = req.body;
@@ -65,7 +65,7 @@ router.post('/discord-login', async (req, res) => {
 
     res.json({ user_id: userId, username });
   } catch (err) {
-    console.error('🛑 디스코드 로그인 오류:', err);
+    console.error('디스코드 로그인 오류:', err);
     res.status(500).json({ error: '서버 오류' });
   }
 });
@@ -93,7 +93,7 @@ router.post('/kakao-login', async (req, res) => {
     let userId;
 
     if (userCheck.rows.length === 0) {
-      // 🔥 신규 가입 처리
+      // 신규 가입 처리
       const insertRes = await client.query(
         'INSERT INTO "User" (username, email, auth_type) VALUES ($1, $2, $3) RETURNING user_id',
         [nickname, `${nickname}@kakao.com`, 'kakao']
@@ -134,7 +134,7 @@ router.post('/google-login', async (req, res) => {
 
     res.json({ user_id: userId });
   } catch (err) {
-    console.error('🛑 구글 로그인 서버 오류:', err);
+    console.error('구글 로그인 서버 오류:', err);
     res.status(500).json({ error: "서버 오류" });
   }
 });

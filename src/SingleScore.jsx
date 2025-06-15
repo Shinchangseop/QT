@@ -27,7 +27,7 @@ function SingleScore() {
           style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
-            gap: '8px 24px', // ✅ 간격 좁힘
+            gap: '8px 24px', 
             backgroundColor: '#fff4e6',
             padding: '24px 32px',
             borderRadius: '16px',

@@ -29,7 +29,6 @@ const getQuizById = async (quizId) => {
   return quiz;
 };
 
-// 기존 addQuiz 유지하면서 함께 export
 module.exports = {
   addQuiz,
   getQuizById

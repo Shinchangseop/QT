@@ -9,7 +9,7 @@ function EditNew() {
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [quizTitle, setQuizTitle] = useState('');
   const navigate = useNavigate();
-  const { quizId } = useParams(); // 수정 모드 판별용
+  const { quizId } = useParams();
   const typeBoxRef = useRef(null);
 
   const isEditMode = !!quizId;
@@ -116,7 +116,6 @@ function EditNew() {
   
     try {
       if (isEditMode) {
-        // 수정 모드: 기존 퀴즈 삭제 후 재등록
         await fetch(`/api/quiz/delete/${quizId}`, { method: 'DELETE' });
       }
   
