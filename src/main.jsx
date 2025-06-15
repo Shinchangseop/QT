@@ -19,7 +19,7 @@ import MultiScore from './multiscore';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <GoogleOAuthProvider clientId="708374970357-2vuikudvhcf8862t3oplijnt2lmd87mq.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <BrowserRouter>
         <Routes>
           <Route path='/' element={<App />} />

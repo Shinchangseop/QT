@@ -11,7 +11,7 @@ import { useGoogleLogin } from '@react-oauth/google';
 
 function Signup() {
   const handleDiscordLogin = () => {
-    const clientId = '1359476172420939877';
+    const clientId = import.meta.env.VITE_DISCORD_CLIENT_ID;
     const redirectUri = encodeURIComponent(import.meta.env.VITE_DISCORD_REDIRECT_URI);
     const scope = 'identify email';
   
@@ -60,7 +60,7 @@ function Signup() {
   // ✅ 카카오 로그인
   useEffect(() => {
     if (window.Kakao && !window.Kakao.isInitialized()) {
-      window.Kakao.init('b9d59ec1e40e9370c445c7ad41275583');
+      window.Kakao.init(import.meta.env.VITE_KAKAO_JS_KEY);
       console.log('카카오 SDK 초기화 완료');
     }
   }, []);
