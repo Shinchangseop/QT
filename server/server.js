@@ -222,16 +222,23 @@ io.on('connection', (socket) => {
       }
     }
 
-  if (nextIdx === undefined) {
-    const sortedResults = Object.entries(multiPlayState[roomId].scores)
-      .map(([user, score]) => ({ user, score }))
-      .sort((a, b) => b.score - a.score);
+    if (nextIdx === undefined) {
+      const sortedResults = Object.entries(multiPlayState[roomId].scores)
+        .map(([user, score]) => ({ user, score }))
+        .sort((a, b) => b.score - a.score);
 
-    io.to(roomId).emit('game-over', {
-      roomId,
-      results: sortedResults
-    });
-  }
+      io.to(roomId).emit('game-over', {
+        roomId,
+        results: sortedResults
+      });
+
+      if (multiPlayState[roomId]) {
+        // 모든 게임 상태 초기화
+        multiPlayState[roomId].questions = [];
+        multiPlayState[roomId].answered = false;
+      }
+    }
+
 
     io.to(roomId).emit('multi-answer', {
       user,
