@@ -58,7 +58,10 @@ function RoomSettingModal({ visible, onClose, onConfirm, initialData = {} }) {
         </label>
 
         <label>퀴즈 선택</label>
-        <select value={selectedQuizId} onChange={e => setSelectedQuizId(e.target.value)}>
+        <select
+            value={selectedQuizId}
+            onChange={(e) => setSelectedQuizId(Number(e.target.value))} // ✅ 정수로 변환
+            >
           {quizList.map(q => (
             <option key={q.quiz_id} value={q.quiz_id}>{q.title}</option>
           ))}
