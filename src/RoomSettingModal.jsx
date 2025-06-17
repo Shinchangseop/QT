@@ -1,151 +1,324 @@
-// RoomSettingModal.jsx
 import React, { useEffect, useState } from 'react';
 
-function RoomSettingModal({ visible, onClose, onConfirm, initialData = {}, roomId }) {
+function RoomSettingModal({
+  visible,
+  onClose,
+  onConfirm,
+  initialData = {},
+  quizListApi,  // /api/quiz/list/paged?page=1&keyword=...
+  myQuizListApi, // /api/quiz/list/:user_id
+  roomId,
+  nickname
+}) {
+  // 1단계: 퀴즈 선택, 2단계: 방 설정
   const [modalStep, setModalStep] = useState(1);
+
+  // 퀴즈 선택 관련
   const [quizTab, setQuizTab] = useState('all');
   const [quizList, setQuizList] = useState([]);
-  const [searchKeyword, setSearchKeyword] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [selectedQuiz, setSelectedQuiz] = useState(null);
-  const [questionCount, setQuestionCount] = useState(5);
-  const [title, setTitle] = useState('');
-  const [password, setPassword] = useState('');
+  const [selectedQuizId, setSelectedQuizId] = useState(null);
+  const [questionCount, setQuestionCount] = useState(1);
+  const [searchKeyword, setSearchKeyword] = useState('');
+
+  // 방 설정 관련
+  const [roomTitle, setRoomTitle] = useState('');
+  const [roomPassword, setRoomPassword] = useState('');
   const [maxPlayers, setMaxPlayers] = useState(8);
-  const [useTimer, setUseTimer] = useState(false);
-  const [useHint, setUseHint] = useState(false);
+  const [useDefaultTime, setUseDefaultTime] = useState(true);
+  const [useHint, setUseHint] = useState(true);
 
-  const userId = localStorage.getItem('user_id');
-
+  // 최초 진입시 초기 데이터 반영
   useEffect(() => {
     if (!visible) return;
-    setTitle(initialData.title || '');
-    setPassword(initialData.password || '');
-    setUseTimer(initialData.use_timer || false);
-    setUseHint(initialData.use_hint || false);
-    setSelectedQuiz(initialData.quiz_id || null);
-    setQuestionCount(initialData.question_count || 5);
+    setModalStep(1);
+    setRoomTitle(initialData.title || '');
+    setRoomPassword(initialData.password || '');
+    setMaxPlayers(initialData.max_players || 8);
+    setUseDefaultTime(initialData.use_timer ?? true);
+    setUseHint(initialData.use_hint ?? true);
+    setSelectedQuizId(initialData.quiz_id || null);
+    setQuestionCount(initialData.question_count || 1);
   }, [visible, initialData]);
 
+  // 퀴즈 목록 불러오기 (탭/검색/페이지)
   useEffect(() => {
-    const fetchQuizList = async () => {
-      const baseUrl = quizTab === 'mine' ? `/api/quiz/list/${userId}` : '/api/quiz/list/paged?page=1';
-      const url = searchKeyword ? `${baseUrl}&keyword=${encodeURIComponent(searchKeyword)}` : baseUrl;
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-        setQuizList(Array.isArray(data) ? data : data.quizzes || []);
-      } catch (err) {
-        console.error('퀴즈 목록 로딩 실패:', err);
-        setQuizList([]);
-      }
-    };
-    fetchQuizList();
-  }, [quizTab, searchKeyword]);
+    if (!visible || modalStep !== 1) return;
+    let url = '';
+    if (quizTab === 'all') {
+      url = `/api/quiz/list/paged?page=${currentPage}`;
+      if (searchKeyword) url += `&keyword=${encodeURIComponent(searchKeyword)}`;
+    } else {
+      const userId = localStorage.getItem('user_id');
+      url = `/api/quiz/list/${userId}`;
+      // mine에서 검색은 프론트에서 filter
+    }
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        let list = data.quizzes || data; // paged는 quizzes, mine은 배열
+        if (quizTab === 'mine' && searchKeyword) {
+          const lower = searchKeyword.toLowerCase();
+          list = list.filter(q => q.title.toLowerCase().includes(lower));
+        }
+        setQuizList(list);
+        setTotalPages(data.totalPages || 1);
+      });
+  }, [quizTab, searchKeyword, currentPage, visible, modalStep]);
+
+  // 퀴즈 선택 시 상세 정보 반영
+  useEffect(() => {
+    const found = quizList.find(q => q.quiz_id === selectedQuizId);
+    setSelectedQuiz(found || null);
+    if (found) setQuestionCount(found.total_questions);
+  }, [selectedQuizId, quizList]);
+
+  const formatQuestionCount = (quiz) => {
+    const icons = [];
+    if (quiz.text_count > 0) icons.push(`📝${quiz.text_count}`);
+    if (quiz.image_count > 0) icons.push(`🖼️${quiz.image_count}`);
+    if (quiz.sound_count > 0) icons.push(`🔊${quiz.sound_count}`);
+    const total = quiz.total_questions || 0;
+    return `${total}문제${icons.length ? ' (' + icons.join(', ') + ')' : ''}`;
+  };
 
   const handleApply = async () => {
-    const payload = {
-      title,
-      password,
+    // 적용 버튼 클릭(어느 단계든 동작)
+    const body = {
+      title: roomTitle,
+      password: roomPassword,
       maxPlayers,
-      use_timer: useTimer,
+      use_timer: useDefaultTime,
       use_hint: useHint,
-      quiz_id: selectedQuiz,
-      question_count: questionCount
+      quiz_id: selectedQuizId,
+      question_count: questionCount,
     };
     try {
       const res = await fetch(`/api/room/update/${roomId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(body)
       });
       const updated = await res.json();
-      onConfirm(updated);
+      onConfirm(updated); // 즉시 반영
       onClose();
     } catch (err) {
-      console.error('설정 업데이트 실패:', err);
+      console.error('설정 변경 실패:', err);
     }
+  };
+
+  const handleEnterKey = (e) => {
+    if (e.key === 'Enter') setCurrentPage(1);
   };
 
   if (!visible) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ minWidth: 600, maxWidth: 800 }}>
+        {/* 1단계: 퀴즈 선택 */}
         {modalStep === 1 && (
           <>
             <h2>퀴즈 선택</h2>
-            <div className="quiz-tab">
-              <label><input type="radio" checked={quizTab === 'all'} onChange={() => setQuizTab('all')} /> 전체 퀴즈</label>
-              <label><input type="radio" checked={quizTab === 'mine'} onChange={() => setQuizTab('mine')} /> 내 퀴즈</label>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '30px', fontSize: '16px', marginBottom: '10px' }}>
+              <label>
+                <input
+                  type="radio"
+                  checked={quizTab === 'all'}
+                  onChange={() => {
+                    setQuizTab('all');
+                    setCurrentPage(1);
+                  }}
+                />
+                전체 퀴즈
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  checked={quizTab === 'mine'}
+                  onChange={() => {
+                    setQuizTab('mine');
+                    setCurrentPage(1);
+                  }}
+                />
+                내 퀴즈
+              </label>
             </div>
-            <input type="text" placeholder="검색" value={searchKeyword} onChange={(e) => setSearchKeyword(e.target.value)} />
-            <div className="quiz-list">
+
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+              <input
+                type="text"
+                placeholder="검색"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                onKeyDown={handleEnterKey}
+                style={{
+                  border: '1px solid #aaa',
+                  borderRadius: '6px',
+                  padding: '6px 10px',
+                  width: '400px'
+                }}
+              />
+              <button className="btn-red" onClick={() => setCurrentPage(1)}>🔍</button>
+            </div>
+
+            <div className="quiz-grid" style={{ marginTop: 20, marginBottom: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               {quizList.map((quiz) => (
                 <div
                   key={quiz.quiz_id}
-                  className={`quiz-item ${quiz.quiz_id === selectedQuiz ? 'selected' : ''}`}
-                  onClick={() => {
-                    setSelectedQuiz(quiz.quiz_id);
-                    setQuestionCount(quiz.total_questions);
+                  className={`quiz-card ${selectedQuizId === quiz.quiz_id ? 'selected' : ''}`}
+                  onClick={() => setSelectedQuizId(quiz.quiz_id)}
+                  style={{
+                    cursor: 'pointer',
+                    border: selectedQuizId === quiz.quiz_id ? '2px solid orange' : '1px solid #ddd',
+                    borderRadius: '10px',
+                    background: 'white',
+                    padding: '14px 24px',
                   }}
                 >
-                  <strong>{quiz.title}</strong>
-                  <p>{quiz.total_questions}문제 / {quiz.author}</p>
+                  <div style={{ fontWeight: 'bold', fontSize: '15px' }}>{quiz.title}</div>
+                  <div style={{ fontSize: '14px', color: '#555' }}>{formatQuestionCount(quiz)}</div>
+                  <div style={{ fontSize: '14px' }}>{quiz.author}</div>
                 </div>
               ))}
             </div>
+
+            {/* 문제 수 슬라이더 */}
             {selectedQuiz && (
-              <div className="slider-section">
-                <label>문제 수: {questionCount}</label>
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '20px' }}>
                 <input
                   type="range"
                   min={1}
-                  max={quizList.find(q => q.quiz_id === selectedQuiz)?.total_questions || 30}
+                  max={selectedQuiz?.total_questions || 1}
                   value={questionCount}
-                  onChange={(e) => setQuestionCount(parseInt(e.target.value))}
+                  disabled={!selectedQuiz}
+                  onChange={(e) => setQuestionCount(Number(e.target.value))}
                 />
+                <input
+                  type="number"
+                  min={1}
+                  max={selectedQuiz?.total_questions || 1}
+                  value={questionCount}
+                  disabled={!selectedQuiz}
+                  onChange={(e) => {
+                    const val = Math.max(1, Math.min(selectedQuiz?.total_questions || 1, Number(e.target.value)));
+                    setQuestionCount(val);
+                  }}
+                  style={{
+                    width: '40px',
+                    textAlign: 'center',
+                    fontSize: '14px',
+                    padding: '2px 4px',
+                    border: '1px solid #ccc',
+                    borderRadius: '6px'
+                  }}
+                />
+                <span>/ {selectedQuiz?.total_questions || 0} 문제</span>
               </div>
             )}
-            <div className="modal-actions">
-              <button onClick={() => setModalStep(2)}>방 설정</button>
-              <button onClick={handleApply}>적용</button>
-              <button onClick={onClose}>취소</button>
+
+            {/* 하단 버튼 */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: 28 }}>
+              <button className="btn-orange" onClick={() => setModalStep(2)}>방 설정</button>
+              <button className="btn-orange" onClick={handleApply}>적용</button>
+              <button className="btn-gray" onClick={onClose}>취소</button>
             </div>
+
+            {/* 페이지네이션 */}
+            {quizTab === 'all' && (
+              <div style={{ marginTop: 18, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
+                <button
+                  className="page-btn"
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                >{'<'}</button>
+                <span>{currentPage} / {totalPages}</span>
+                <button
+                  className="page-btn"
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                >{'>'}</button>
+              </div>
+            )}
           </>
         )}
 
+        {/* 2단계: 방 설정 */}
         {modalStep === 2 && (
           <>
             <h2>방 설정</h2>
-            <label>대기실 제목</label>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} />
 
-            <label>비밀번호 (최대 8자리 숫자)</label>
-            <input value={password} maxLength={8} onChange={(e) => {
-              if (/^\d{0,8}$/.test(e.target.value)) setPassword(e.target.value);
-            }} />
+            {/* 대기실 제목 */}
+            <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <label style={{ minWidth: 70 }}>대기실 제목</label>
+              <input
+                type="text"
+                value={roomTitle}
+                onChange={(e) => setRoomTitle(e.target.value)}
+                style={{ flex: 1, padding: '8px', fontSize: '14px', border: '1px solid #ccc', borderRadius: '6px' }}
+              />
+            </div>
 
-            <label>최대 인원: {maxPlayers}</label>
-            <input
-              type="range"
-              min={2}
-              max={8}
-              value={maxPlayers}
-              onChange={(e) => setMaxPlayers(parseInt(e.target.value))}
-            />
+            {/* 비밀번호 */}
+            <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <label style={{ minWidth: 70 }}>비밀번호</label>
+              <input
+                type="text"
+                value={roomPassword}
+                maxLength={8}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (/^\d{0,8}$/.test(val)) setRoomPassword(val);
+                }}
+                style={{ flex: 1, padding: '8px', fontSize: '14px', border: '1px solid #ccc', borderRadius: '6px' }}
+              />
+            </div>
 
-            <label>제한 시간</label>
-            <label><input type="radio" checked={useTimer} onChange={() => setUseTimer(true)} /> 기본 시간</label>
-            <label><input type="radio" checked={!useTimer} onChange={() => setUseTimer(false)} /> 제한 없음</label>
+            {/* 최대 인원 */}
+            <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <label style={{ minWidth: 70 }}>최대 인원</label>
+              <input
+                type="range"
+                min={2}
+                max={8}
+                value={maxPlayers}
+                onChange={(e) => setMaxPlayers(Number(e.target.value))}
+                style={{ flex: 1 }}
+              />
+              <span>{maxPlayers}명</span>
+            </div>
 
-            <label>힌트 사용</label>
-            <label><input type="radio" checked={useHint} onChange={() => setUseHint(true)} /> 사용함</label>
-            <label><input type="radio" checked={!useHint} onChange={() => setUseHint(false)} /> 사용 안함</label>
+            {/* 제한 시간 */}
+            <div style={{ marginBottom: '16px' }}>
+              <label>제한 시간</label>
+              <div>
+                <label style={{ marginRight: 24 }}>
+                  <input type="radio" checked={useDefaultTime} onChange={() => setUseDefaultTime(true)} /> 기본 시간
+                </label>
+                <label>
+                  <input type="radio" checked={!useDefaultTime} onChange={() => setUseDefaultTime(false)} /> 제한 없음
+                </label>
+              </div>
+            </div>
 
-            <div className="modal-actions">
-              <button onClick={() => setModalStep(1)}>이전으로</button>
-              <button onClick={handleApply}>적용</button>
-              <button onClick={onClose}>취소</button>
+            {/* 힌트 사용 */}
+            <div style={{ marginBottom: '16px' }}>
+              <label>힌트 사용</label>
+              <div>
+                <label style={{ marginRight: 24 }}>
+                  <input type="radio" checked={useHint} onChange={() => setUseHint(true)} /> 사용함
+                </label>
+                <label>
+                  <input type="radio" checked={!useHint} onChange={() => setUseHint(false)} /> 사용 안함
+                </label>
+              </div>
+            </div>
+
+            {/* 하단 버튼 */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: 28 }}>
+              <button className="btn-gray" onClick={() => setModalStep(1)}>이전으로</button>
+              <button className="btn-orange" onClick={handleApply}>적용</button>
+              <button className="btn-gray" onClick={onClose}>취소</button>
             </div>
           </>
         )}
