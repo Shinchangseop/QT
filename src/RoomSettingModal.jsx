@@ -164,23 +164,30 @@ function RoomSettingModal({
               <button className="btn-red" onClick={() => setCurrentPage(1)}>🔍</button>
             </div>
 
-            <div className="quiz-grid" style={{ marginTop: 20, marginBottom: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div
+                className="quiz-grid"
+                style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '14px',
+                    marginTop: '18px',
+                }}
+                >
               {quizList.map((quiz) => (
                 <div
-                  key={quiz.quiz_id}
-                  className={`quiz-card ${selectedQuizId === quiz.quiz_id ? 'selected' : ''}`}
+                key={quiz.quiz_id}
+                className={`quiz-card ${selectedQuizId === quiz.quiz_id ? 'selected' : ''}`}
                   onClick={() => setSelectedQuizId(quiz.quiz_id)}
-                  style={{
-                    cursor: 'pointer',
-                    border: selectedQuizId === quiz.quiz_id ? '2px solid orange' : '1px solid #ddd',
-                    borderRadius: '10px',
-                    background: 'white',
-                    padding: '14px 24px',
-                  }}
+                   style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '16px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.07)', background: 'white'
+                }}
                 >
-                  <div style={{ fontWeight: 'bold', fontSize: '15px' }}>{quiz.title}</div>
-                  <div style={{ fontSize: '14px', color: '#555' }}>{formatQuestionCount(quiz)}</div>
-                  <div style={{ fontSize: '14px' }}>{quiz.author}</div>
+                <div style={{ textAlign: 'left', flex: 1 }}>
+                    <div style={{ fontWeight: 'bold', fontSize: '16px', marginBottom: '2px' }}>{quiz.title}</div>
+                    <div style={{ fontSize: '13px', color: '#555' }}>{formatQuestionCount(quiz)}</div>
+                </div>
+                <div style={{ flex: 0, minWidth: '80px', textAlign: 'right', fontSize: '14px', color: '#888' }}>{quiz.author}</div>
                 </div>
               ))}
             </div>
@@ -219,13 +226,6 @@ function RoomSettingModal({
               </div>
             )}
 
-            {/* 하단 버튼 */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: 28 }}>
-              <button className="btn-orange" onClick={() => setModalStep(2)}>방 설정</button>
-              <button className="btn-orange" onClick={handleApply}>적용</button>
-              <button className="btn-gray" onClick={onClose}>취소</button>
-            </div>
-
             {/* 페이지네이션 */}
             {quizTab === 'all' && (
               <div style={{ marginTop: 18, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
@@ -240,6 +240,14 @@ function RoomSettingModal({
                 >{'>'}</button>
               </div>
             )}
+
+            {/* 하단 버튼 */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: 28 }}>
+              <button className="btn-orange" onClick={() => setModalStep(2)}>방 설정</button>
+              <button className="btn-orange" onClick={handleApply}>적용</button>
+              <button className="btn-orange" onClick={onClose}>취소</button>
+            </div>
+
           </>
         )}
 
@@ -316,9 +324,9 @@ function RoomSettingModal({
 
             {/* 하단 버튼 */}
             <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: 28 }}>
-              <button className="btn-gray" onClick={() => setModalStep(1)}>이전으로</button>
+              <button className="btn-orange" onClick={() => setModalStep(1)}>이전으로</button>
               <button className="btn-orange" onClick={handleApply}>적용</button>
-              <button className="btn-gray" onClick={onClose}>취소</button>
+              <button className="btn-orange" onClick={onClose}>취소</button>
             </div>
           </>
         )}
