@@ -387,35 +387,3 @@ body {
   align-items: center;
   background-color: transparent;
 }
-
-/* modal 전체 배경 */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0,0,0,0.5);
-  z-index: 1000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* 실제 창 영역 */
-.modal-content {
-  background: white;
-  padding: 24px 32px;
-  border-radius: 12px;
-  width: 480px;
-  max-width: 90%;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-}
-
-/* 모달 내부 버튼 정렬 */
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 20px;
-  gap: 10px;
-}
