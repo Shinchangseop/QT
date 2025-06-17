@@ -1,5 +1,6 @@
 // RoomSettingModal.jsx
 import React, { useState, useEffect } from 'react';
+import './App.css';
 
 function RoomSettingModal({ visible, onClose, onConfirm, initialData = {} }) {
   const [title, setTitle] = useState('');

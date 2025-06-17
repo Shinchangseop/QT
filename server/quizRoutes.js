@@ -201,9 +201,10 @@ router.post('/result/save', async (req, res) => {
 
 // 내 퀴즈 목록 조회 (RoomSettingModal에서 사용)
 router.get('/my', async (req, res) => {
-  const userId = parseInt(req.query.userId, 10);  // 문자열 → 숫자 변환
+  const userId = parseInt(req.query.userId, 10); // ⬅️ 문자열 → 숫자 변환
 
   if (isNaN(userId)) {
+    console.error('❌ 잘못된 userId:', req.query.userId); // 🔍 추가 로그 추천
     return res.status(400).json({ error: '잘못된 userId입니다.' });
   }
 
@@ -221,17 +222,17 @@ router.get('/my', async (req, res) => {
        LEFT JOIN question qs ON q.quiz_id = qs.quiz_id
        WHERE q.created_by = $1
        GROUP BY q.quiz_id, u.username
-       ORDER BY q.created_at DESC
-      `,
+       ORDER BY q.created_at DESC`,
       [userId]
     );
 
     res.json(result.rows);
   } catch (err) {
-    console.error('❌ 내 퀴즈 불러오기 실패:', err.message);
-    res.status(500).json({ error: '내 퀴즈 목록 조회 실패' });
+    console.error('❌ 내 퀴즈 목록 조회 실패:', err.message);
+    res.status(500).json({ error: '퀴즈 로딩 실패' });
   }
 });
+
 
 
 
