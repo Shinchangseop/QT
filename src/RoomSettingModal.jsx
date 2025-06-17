@@ -22,8 +22,16 @@ function RoomSettingModal({ visible, onClose, onConfirm, initialData = {} }) {
     // 퀴즈 목록 불러오기
     fetch(`/api/quiz/my?userId=${userId}`)
     .then(res => res.json())
-    .then(setQuizList)
+    .then(data => {
+        if (Array.isArray(data)) {
+        setQuizList(data);
+        } else {
+        console.error('퀴즈 목록 형식 아님:', data);  // ⬅️ 오류 출력
+        setQuizList([]); // ⬅️ 안전 처리
+        }
+    })
     .catch(console.error);
+    console.log('user_id:', userId); // 여기에 "my"라고 나오면 DB 터짐
   }, [visible, initialData]);
 
   const handleConfirm = () => {
