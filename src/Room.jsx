@@ -164,22 +164,21 @@ const handleSendMessage = () => {
                       <button
                         className="btn-orange"
                         onClick={handleStartGame}
-                        style={{ flex: 7 }}
+                        style={{ flex: 8 }}
                       >
                         게임 시작
                       </button>
                       <button
                         className="btn-orange"
-                        style={{ flex: 3 }}
+                        style={{ flex: 2 }}
                       >
                         ⚙️
                       </button>
                     </div>
                   )}
-                  <div style={{ flexGrow: 1 }} /> {/* 빈 공간으로 나가기 버튼을 하단에 밀기 */}
                   <button
                     className="btn-orange"
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', marginTop: '10px' }}  // ✅ 상단 여백만 살짝 줌
                     onClick={() => navigate('/join')}
                   >
                     나가기
