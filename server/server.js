@@ -140,8 +140,10 @@ io.on('connection', (socket) => {
     };
 
     // DB에서 퀴즈 ID 받아오기
-    const roomRes = await db.query('SELECT quiz_id FROM rooms WHERE id = $1', [roomId]);
+    const roomRes = await db.query('SELECT quiz_id, question_count FROM rooms WHERE id = $1', [roomId]);
     const quizId = roomRes.rows[0]?.quiz_id;
+    const questionCount = roomRes.rows[0]?.question_count || 10; // 기본값 10
+
     if (!quizId) {
       console.error('❌ 퀴즈 ID 불러오기 실패');
       return;
@@ -161,7 +163,7 @@ io.on('connection', (socket) => {
       if (!seen.has(key)) {
         unique.push(q);
         seen.add(key);
-        if (unique.length >= 10) break;
+        if (unique.length >= questionCount) break; // ← DB에서 받아온 문제 개수로 수정
       }
     }
 
