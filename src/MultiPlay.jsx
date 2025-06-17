@@ -307,11 +307,19 @@ useEffect(() => {
               {!currentQ
                 ? '문제를 불러오는 중...'
                 : isAnswered ? (
-                    <div style={{ fontSize: answeredUser === '[SYSTEM]' ? '22px' : '28px', color: answerType === 'correct' ? 'green' : 'red' }}>
-                        {answeredUser === '[SYSTEM]'
-                        ? <>전원 오답!<br /><span style={{ fontSize: '18px' }}>정답: {currentQ.answer}</span></>
-                        : `${answeredUser}님 정답!`}
-                    </div>
+                        <div style={{ fontSize: answeredUser === '[SYSTEM]' ? '22px' : '28px', color: answerType === 'correct' ? 'green' : 'red' }}>
+                            {answeredUser === '[SYSTEM]' ? (
+                                <>
+                                    전원 오답!<br />
+                                    <span style={{ fontSize: '18px' }}>정답: {currentQ.answer.split('/')[0].trim()}</span>
+                                </>
+                            ) : (
+                                <>
+                                    {answeredUser}님 정답!<br />
+                                    <span style={{ fontSize: '18px' }}>정답: {currentQ.answer.split('/')[0].trim()}</span>
+                                </>
+                            )}
+                        </div>
                     ) : currentQ.type === 'image' ? (
                     <>
                         <img src={currentQ.media_url} alt="문제 이미지" style={{ maxHeight: '120px', marginBottom: '10px' }} />
