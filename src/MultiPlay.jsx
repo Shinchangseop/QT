@@ -13,7 +13,7 @@ import SCORE_ALARMSound from "./assets/sound/SCORE_ALARM.mp3";
 
 
 // 퀴즈 정보 영역 렌더
-function QuizHeader({ quizTitle, currentIdx, total, timer }) {
+function QuizHeader({ roomTitle, quizTitle, currentIdx, total, timer }) {
   return (
     <div style={{
       backgroundColor: '#fdebd0',
@@ -22,14 +22,32 @@ function QuizHeader({ quizTitle, currentIdx, total, timer }) {
       marginBottom: '12px',
       textAlign: 'center'
     }}>
-      <h2 style={{ margin: 0 }}>{quizTitle}</h2>
-      <div style={{ fontSize: '20px', fontWeight: 'bold', display: 'flex', justifyContent: 'center', gap: '60px' }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        fontWeight: 'bold',
+        fontSize: '22px',
+        marginBottom: '2px',
+        padding: '0 28px',
+      }}>
+        <span>{roomTitle}</span>
+        <span>{quizTitle}</span>
+      </div>
+      <div style={{
+        fontSize: '20px',
+        fontWeight: 'bold',
+        display: 'flex',
+        justifyContent: 'center',
+        gap: '60px'
+      }}>
         <span>{currentIdx + 1} / {total}</span>
         <span>⏰ {timer}초</span>
       </div>
     </div>
   );
 }
+
 
 function MultiPlay() {
   const { roomId } = useParams();
@@ -275,22 +293,13 @@ useEffect(() => {
   return (
     <Layout>
       <div style={{ width: '80%', backgroundColor: '#fff4e6', padding: '20px', borderRadius: '20px', margin: '0 auto' }}>
-        {/* 3. 퀴즈 정보/타이머 최상단 표시 */}
-        <div style={{
-            fontSize: '20px',
-            fontWeight: 'bold',
-            marginBottom: '10px',
-            textAlign: 'center'
-        }}>
-            {roomInfo?.title || '대기실'} | {quizInfo?.title || '퀴즈'}
-        </div>
         <QuizHeader
+          roomTitle={roomInfo?.title || ''}
           quizTitle={quizInfo?.title || ''}
           currentIdx={currentIdx}
           total={questions.length}
           timer={timer}
         />
-
         <div style={{ maxWidth: '1440px', margin: '0 auto', display: 'flex', gap: '20px' }}>
           {/* 문제 + 채팅 */}
           <div style={{ flex: 3, display: 'flex', flexDirection: 'column', gap: '20px' }}>
