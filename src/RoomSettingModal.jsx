@@ -117,7 +117,7 @@ function RoomSettingModal({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ minWidth: 600, maxWidth: 800 }}>
+      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ minWidth: 650, maxWidth: 900 }}>
         {/* 1단계: 퀴즈 선택 */}
         {modalStep === 1 && (
           <>
@@ -263,7 +263,14 @@ function RoomSettingModal({
                 type="text"
                 value={roomTitle}
                 onChange={(e) => setRoomTitle(e.target.value)}
-                style={{ flex: 1, padding: '8px', fontSize: '14px', border: '1px solid #ccc', borderRadius: '6px' }}
+                    style={{
+                    width: '320px',
+                    padding: '8px',
+                    fontSize: '15px',
+                    border: '1px solid #ccc',
+                    borderRadius: '6px',
+                    margin: '0 auto'
+                    }}
               />
             </div>
 
@@ -278,7 +285,14 @@ function RoomSettingModal({
                   const val = e.target.value;
                   if (/^\d{0,8}$/.test(val)) setRoomPassword(val);
                 }}
-                style={{ flex: 1, padding: '8px', fontSize: '14px', border: '1px solid #ccc', borderRadius: '6px' }}
+                    style={{
+                    width: '320px',
+                    padding: '8px',
+                    fontSize: '15px',
+                    border: '1px solid #ccc',
+                    borderRadius: '6px',
+                    margin: '0 auto'
+                    }}
               />
             </div>
 
@@ -291,7 +305,14 @@ function RoomSettingModal({
                 max={8}
                 value={maxPlayers}
                 onChange={(e) => setMaxPlayers(Number(e.target.value))}
-                style={{ flex: 1 }}
+                    style={{
+                    width: '320px',
+                    padding: '8px',
+                    fontSize: '15px',
+                    border: '1px solid #ccc',
+                    borderRadius: '6px',
+                    margin: '0 auto'
+                    }}
               />
               <span>{maxPlayers}명</span>
             </div>
