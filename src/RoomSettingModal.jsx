@@ -87,13 +87,13 @@ function RoomSettingModal({
   const handleApply = async () => {
     // 적용 버튼 클릭(어느 단계든 동작)
     const body = {
-      title: roomTitle,
-      password: roomPassword,
-      maxPlayers,
-      use_timer: useDefaultTime,
-      use_hint: useHint,
-      quiz_id: selectedQuizId,
-      question_count: questionCount,
+    title: roomTitle,
+    password: roomPassword,
+    max_players: maxPlayers,           // 필드명 통일
+    use_timer: useDefaultTime,
+    use_hint: useHint,
+    quiz_id: selectedQuizId,
+    question_count: questionCount,
     };
     try {
       const res = await fetch(`/api/room/update/${roomId}`, {
@@ -288,15 +288,14 @@ function RoomSettingModal({
                   const val = e.target.value;
                   if (/^\d{0,8}$/.test(val)) setRoomPassword(val);
                 }}
-                    style={{
-                    width: '320px',
-                    padding: '8px',
-                    fontSize: '15px',
+                style={{
+                    width: '220px',
+                    padding: '8px 10px',
+                    fontSize: '14px',
                     border: '1px solid #ccc',
-                    borderRadius: '6px',
-                    margin: '0 auto'
-                    }}
-              />
+                    borderRadius: '6px'
+                }}
+                />
             </div>
 
             {/* 최대 인원 */}
@@ -309,16 +308,14 @@ function RoomSettingModal({
                 max={8}
                 value={maxPlayers}
                 onChange={(e) => setMaxPlayers(Number(e.target.value))}
-                    style={{
-                    width: '200px',
-                    padding: '8px',
-                    fontSize: '15px',
+                style={{
+                    width: '220px',
+                    padding: '8px 10px',
+                    fontSize: '14px',
                     border: '1px solid #ccc',
-                    borderRadius: '6px',
-                    margin: '0 auto'
-                    }}
-                
-              />
+                    borderRadius: '6px'
+                }}
+                />
               <span>{maxPlayers}명</span>
             </div>
 
