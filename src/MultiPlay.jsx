@@ -166,11 +166,17 @@ useEffect(() => {
 
 useEffect(() => {
   const fetchRoomInfo = async () => {
+    // 1. 방 정보 먼저 불러오기
     const res = await fetch(`/api/room/${roomId}`);
-    const data = await res.json();
-    console.log("🎯 fetchRoomInfo result:", data); 
-    setRoomInfo(data.room);
-    setQuizInfo(data.quiz);
+    const room = await res.json();
+    setRoomInfo(room); // room 자체
+
+    // 2. 퀴즈 정보도 별도 fetch
+    if (room.quiz_id) {
+      const quizRes = await fetch(`/api/quiz/${room.quiz_id}`);
+      const quizData = await quizRes.json();
+      setQuizInfo(quizData);
+    }
   };
   fetchRoomInfo();
 }, [roomId]);
