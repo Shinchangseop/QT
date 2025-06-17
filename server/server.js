@@ -244,7 +244,7 @@ io.on('connection', (socket) => {
       setTimeout(() => {
         multiPlayState[roomId].answered = false;
         io.to(roomId).emit('multi-sync-question', nextIdx);
-      }, 1200);
+      }, 2800);
     }
   });
 });
