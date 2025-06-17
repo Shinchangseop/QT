@@ -3,6 +3,7 @@ import Layout from './Layout';
 import { useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import { useNavigate } from 'react-router-dom';
+import RoomSettingModal from './RoomSettingModal';
 
 function Room() {
   const { roomId } = useParams();
