@@ -152,15 +152,40 @@ const handleSendMessage = () => {
                 <p>힌트 사용: {roomInfo.use_hint ? '사용함' : '사용 안함'}</p>
                 <p>제한 시간: {roomInfo.use_timer ? '기본 시간' : '제한 없음'}</p>
               </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', marginTop: '20px' }}>
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                  marginTop: '20px',
+                  height: '100%'  // 버튼 아래로 밀기 위한 조건
+                }}>
                   {isHost && (
-                    <>
-                      <button className="btn-orange" onClick={handleStartGame}>게임 시작</button>
-                      <button className="btn-red">설정 변경</button>
-                    </>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <button
+                        className="btn-orange"
+                        onClick={handleStartGame}
+                        style={{ flex: 7 }}
+                      >
+                        게임 시작
+                      </button>
+                      <button
+                        className="btn-orange"
+                        style={{ flex: 3 }}
+                      >
+                        ⚙️
+                      </button>
+                    </div>
                   )}
-                  <button className="btn-gray" onClick={() => navigate('/join')}>나가기</button>
+                  <div style={{ flexGrow: 1 }} /> {/* 빈 공간으로 나가기 버튼을 하단에 밀기 */}
+                  <button
+                    className="btn-orange"
+                    style={{ width: '100%' }}
+                    onClick={() => navigate('/join')}
+                  >
+                    나가기
+                  </button>
                 </div>
+
 
             </div>
 
@@ -177,7 +202,8 @@ const handleSendMessage = () => {
               }}>
                 {playerList.map((player, index) => (
                   <div key={index} style={{
-                    backgroundColor: player ? 'white' : '#ddd',
+                    backgroundColor: 'white',
+                    color: player ? 'black' : '#888',
                     borderRadius: '12px',
                     display: 'flex',
                     alignItems: 'center',
@@ -186,7 +212,7 @@ const handleSendMessage = () => {
                     fontWeight: 'bold',
                     fontSize: '16px'
                   }}>
-                    {player
+                  {player
                     ? (player === roomInfo.created_by ? '👑 ' : '') + player
                     : '빈 자리'}
                   </div>
