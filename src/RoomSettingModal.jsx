@@ -85,15 +85,32 @@ function RoomSettingModal({
   };
 
   const handleApply = async () => {
+
+    if (!roomTitle?.trim()) {
+        alert('대기실 제목을 입력하세요!');
+        return;
+    }
+    if (!selectedQuizId) {
+        alert('퀴즈를 반드시 선택해야 합니다!');
+        return;
+    }
+    if (!questionCount || questionCount < 1) {
+        alert('문제 수가 잘못되었습니다!');
+        return;
+    }
+    if (!maxPlayers || maxPlayers < 2) {
+        alert('최대 인원이 잘못되었습니다!');
+        return;
+    }
     // 적용 버튼 클릭(어느 단계든 동작)
     const body = {
-    title: roomTitle,
-    password: roomPassword,
-    max_players: maxPlayers,           // 필드명 통일
-    use_timer: useDefaultTime,
-    use_hint: useHint,
-    quiz_id: selectedQuizId,
-    question_count: questionCount,
+    title: roomTitle?.trim() || initialData.title || '',           // 비어있으면 초기값이라도
+    password: roomPassword ?? initialData.password ?? '',
+    max_players: maxPlayers ?? initialData.max_players ?? 8,
+    use_timer: useDefaultTime ?? initialData.use_timer ?? true,
+    use_hint: useHint ?? initialData.use_hint ?? true,
+    quiz_id: selectedQuizId ?? initialData.quiz_id,  // 꼭 선택하게 강제!
+    question_count: questionCount ?? initialData.question_count ?? 1,
     };
     try {
       const res = await fetch(`/api/room/update/${roomId}`, {

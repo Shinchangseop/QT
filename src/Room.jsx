@@ -271,6 +271,7 @@ const handleSendMessage = () => {
             alert('설정 변경 중 오류 발생');
           }
         }}
+        roomId={roomId}
       />
     </Layout>
   );
