@@ -133,16 +133,15 @@ const handleSendMessage = () => {
           <div style={{ fontSize: '20px' }}>로딩 중...</div>
         ) : (
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', minHeight: '400px' }}>
-            {/* 왼쪽 정보 영역 */}
-            <div style={{
-              flex: '0 0 250px',
-              backgroundColor: '#fff4e6',
-              padding: '24px',
-              borderRadius: '16px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between'
-            }}>
+              <div style={{
+                flex: '0 0 250px',
+                backgroundColor: '#fff4e6',
+                padding: '24px',
+                borderRadius: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'flex-start' // ✅ 변경
+              }}>
               <div>
                 <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>{roomInfo.title}</h1>
                 <h2 style={{ fontSize: '20px', fontWeight: 'bold' }}>{quizInfo.title}
@@ -152,15 +151,10 @@ const handleSendMessage = () => {
                 <p>힌트 사용: {roomInfo.use_hint ? '사용함' : '사용 안함'}</p>
                 <p>제한 시간: {roomInfo.use_timer ? '기본 시간' : '제한 없음'}</p>
               </div>
-                <div style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '10px',
-                  marginTop: '20px',
-                  height: '100%'  // 버튼 아래로 밀기 위한 조건
-                }}>
+                {/* 왼쪽 패널 하단 버튼 영역 */}
+                <div style={{ marginTop: 'auto' }}>
                   {isHost && (
-                    <div style={{ display: 'flex', gap: '10px' }}>
+                    <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
                       <button
                         className="btn-orange"
                         onClick={handleStartGame}
@@ -178,12 +172,13 @@ const handleSendMessage = () => {
                   )}
                   <button
                     className="btn-orange"
-                    style={{ width: '100%', marginTop: '10px' }}  // ✅ 상단 여백만 살짝 줌
+                    style={{ width: '100%' }}
                     onClick={() => navigate('/join')}
                   >
                     나가기
                   </button>
                 </div>
+
 
 
             </div>
