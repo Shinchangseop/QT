@@ -128,7 +128,7 @@ useEffect(() => {
         setAnsweredUser('');
         setAnswerType('');
         setTimer(20);
-      }, 1500);
+      }, 3000);
     }
   });
 
@@ -230,7 +230,7 @@ useEffect(() => {
           nextIdx: currentIdx + 1 < questions.length ? currentIdx + 1 : undefined
         });
       } else {
-          wrongAudio.current.play(); // 오답 사운드
+        // wrongAudio.current.play(); 오답 사운드 주석 처리(필요시 활성화)
         socketRef.current.emit('send-message', {
             roomId,
             message: { user: nickname, text: trimmed }
