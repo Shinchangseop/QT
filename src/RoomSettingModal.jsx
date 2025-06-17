@@ -8,6 +8,7 @@ function RoomSettingModal({ visible, onClose, onConfirm, initialData = {} }) {
   const [useHint, setUseHint] = useState(false);
   const [quizList, setQuizList] = useState([]);
   const [selectedQuizId, setSelectedQuizId] = useState(null);
+  const userId = localStorage.getItem('user_id');
 
   useEffect(() => {
     if (!visible) return;
@@ -19,10 +20,10 @@ function RoomSettingModal({ visible, onClose, onConfirm, initialData = {} }) {
     setSelectedQuizId(initialData.quiz_id || null);
 
     // 퀴즈 목록 불러오기
-    fetch('/api/quiz/my')
-      .then(res => res.json())
-      .then(setQuizList)
-      .catch(console.error);
+    fetch(`/api/quiz/my?userId=${userId}`)
+    .then(res => res.json())
+    .then(setQuizList)
+    .catch(console.error);
   }, [visible, initialData]);
 
   const handleConfirm = () => {

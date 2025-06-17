@@ -88,10 +88,10 @@ router.post('/update/:roomId', async (req, res) => {
     await db.query(`
       UPDATE rooms
       SET title = $1, password = $2, use_timer = $3, use_hint = $4, quiz_id = $5
-      WHERE room_id = $6
+      WHERE id = $6
     `, [title, password, use_timer, use_hint, quiz_id, roomId]);
 
-    const updated = await db.query('SELECT * FROM rooms WHERE room_id = $1', [roomId]);
+    const updated = await db.query('SELECT * FROM rooms WHERE id = $1', [roomId]);
     res.json(updated.rows[0]);
   } catch (err) {
     console.error(err);
