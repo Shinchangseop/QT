@@ -257,26 +257,29 @@ function RoomSettingModal({
             <h2>방 설정</h2>
 
             {/* 대기실 제목 */}
-            <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <label style={{ minWidth: 70 }}>대기실 제목</label>
-              <input
+            <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <label style={{ marginRight: '6px', fontWeight: 'bold', fontSize: '15px' }}>대기실 제목</label>
+                <input
                 type="text"
                 value={roomTitle}
                 onChange={(e) => setRoomTitle(e.target.value)}
-                    style={{
-                    width: '320px',
-                    padding: '8px',
-                    fontSize: '15px',
+                style={{
+                    width: '220px',
+                    padding: '8px 10px',
+                    fontSize: '14px',
                     border: '1px solid #ccc',
-                    borderRadius: '6px',
-                    margin: '0 auto'
-                    }}
-              />
+                    borderRadius: '6px'
+                }}
+                />
+            </div>
             </div>
 
+
             {/* 비밀번호 */}
-            <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <label style={{ minWidth: 70 }}>비밀번호</label>
+            <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}></div>
+              <label style={{ marginRight: '6px', fontWeight: 'bold', fontSize: '15px' }}>비밀번호</label>
               <input
                 type="text"
                 value={roomPassword}
@@ -297,8 +300,9 @@ function RoomSettingModal({
             </div>
 
             {/* 최대 인원 */}
-            <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <label style={{ minWidth: 70 }}>최대 인원</label>
+            <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}></div>
+              <label style={{ marginRight: '6px', fontWeight: 'bold', fontSize: '15px' }}>최대 인원</label>
               <input
                 type="range"
                 min={2}
@@ -306,13 +310,14 @@ function RoomSettingModal({
                 value={maxPlayers}
                 onChange={(e) => setMaxPlayers(Number(e.target.value))}
                     style={{
-                    width: '320px',
+                    width: '200px',
                     padding: '8px',
                     fontSize: '15px',
                     border: '1px solid #ccc',
                     borderRadius: '6px',
                     margin: '0 auto'
                     }}
+                
               />
               <span>{maxPlayers}명</span>
             </div>
