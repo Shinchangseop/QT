@@ -152,12 +152,16 @@ const handleSendMessage = () => {
                 <p>힌트 사용: {roomInfo.use_hint ? '사용함' : '사용 안함'}</p>
                 <p>제한 시간: {roomInfo.use_timer ? '기본 시간' : '제한 없음'}</p>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '20px' }}>
-                {isHost && (
-                    <button className="btn-orange" onClick={handleStartGame}>게임 시작</button>
-                )}
-                <button className="btn-red">설정 변경</button>
-              </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', marginTop: '20px' }}>
+                  {isHost && (
+                    <>
+                      <button className="btn-orange" onClick={handleStartGame}>게임 시작</button>
+                      <button className="btn-red">설정 변경</button>
+                    </>
+                  )}
+                  <button className="btn-gray" onClick={() => navigate('/join')}>나가기</button>
+                </div>
+
             </div>
 
             {/* 오른쪽 플레이어 + 채팅 */}
@@ -173,7 +177,7 @@ const handleSendMessage = () => {
               }}>
                 {playerList.map((player, index) => (
                   <div key={index} style={{
-                    backgroundColor: 'white',
+                    backgroundColor: player ? 'white' : '#ddd',
                     borderRadius: '12px',
                     display: 'flex',
                     alignItems: 'center',
@@ -182,7 +186,9 @@ const handleSendMessage = () => {
                     fontWeight: 'bold',
                     fontSize: '16px'
                   }}>
-                    {player || '빈 자리'}
+                    {player
+                    ? (player === roomInfo.created_by ? '👑 ' : '') + player
+                    : '빈 자리'}
                   </div>
                 ))}
               </div>

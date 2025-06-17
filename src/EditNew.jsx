@@ -350,6 +350,7 @@ function EditNew() {
                     width: '100%',
                     height: selectedQuestion.type === 'text' ? '250px' : '120px',
                     fontSize: '16px',
+                    fontFamily: 'inherit',
                     resize: 'none'
                   }}
                 />
