@@ -199,5 +199,40 @@ router.post('/result/save', async (req, res) => {
   }
 });
 
+// 내 퀴즈 목록 조회 (RoomSettingModal에서 사용)
+router.get('/my', async (req, res) => {
+  const userId = parseInt(req.query.userId, 10);  // 문자열 → 숫자 변환
+
+  if (isNaN(userId)) {
+    return res.status(400).json({ error: '잘못된 userId입니다.' });
+  }
+
+  try {
+    const result = await db.query(
+      `SELECT q.quiz_id,
+              q.title,
+              u.username AS author,
+              COUNT(qs.question_id) AS total_questions,
+              COUNT(CASE WHEN qs.type = 'text' THEN 1 END) AS text_count,
+              COUNT(CASE WHEN qs.type = 'image' THEN 1 END) AS image_count,
+              COUNT(CASE WHEN qs.type = 'sound' THEN 1 END) AS sound_count
+       FROM "Quiz" q
+       JOIN "User" u ON q.created_by = u.user_id
+       LEFT JOIN question qs ON q.quiz_id = qs.quiz_id
+       WHERE q.created_by = $1
+       GROUP BY q.quiz_id, u.username
+       ORDER BY q.created_at DESC
+      `,
+      [userId]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error('❌ 내 퀴즈 불러오기 실패:', err.message);
+    res.status(500).json({ error: '내 퀴즈 목록 조회 실패' });
+  }
+});
+
+
 
 module.exports = router;
