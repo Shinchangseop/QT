@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 
 function RoomSettingModal({ visible, onClose, onConfirm, initialData = {}, roomId }) {
   const [quizList, setQuizList] = useState([]);
@@ -15,7 +14,7 @@ function RoomSettingModal({ visible, onClose, onConfirm, initialData = {}, roomI
   useEffect(() => {
     if (!visible) return;
 
-    // 초기값 세팅
+    // 초기값
     setTitle(initialData.title || '');
     setPassword(initialData.password || '');
     setUseHint(initialData.use_hint || false);
@@ -23,10 +22,18 @@ function RoomSettingModal({ visible, onClose, onConfirm, initialData = {}, roomI
     setSelectedQuiz(initialData.quiz_id || null);
     setQuestionCount(initialData.question_count || 5);
 
-    axios.get(`/api/quiz/my?userId=${userId}`)
-      .then((res) => setQuizList(res.data))
-      .catch((err) => {
-        console.error('퀴즈 불러오기 실패:', err.message);
+    fetch(`/api/quiz/my?userId=${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setQuizList(data);
+        } else {
+          console.error('퀴즈 목록 불러오기 실패:', data);
+          setQuizList([]);
+        }
+      })
+      .catch(err => {
+        console.error('퀴즈 목록 요청 실패:', err);
         setQuizList([]);
       });
   }, [visible, initialData]);
@@ -41,11 +48,18 @@ function RoomSettingModal({ visible, onClose, onConfirm, initialData = {}, roomI
         quiz_id: selectedQuiz,
         question_count: questionCount,
       };
-      const res = await axios.post(`/api/room/update/${roomId}`, payload);
-      onConfirm(res.data); // 실시간 반영
-      onClose(); // 닫기
+
+      const res = await fetch(`/api/room/update/${roomId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const updated = await res.json();
+      onConfirm(updated); // 실시간 반영
+      onClose();
     } catch (err) {
-      console.error('설정 업데이트 실패:', err.message);
+      console.error('설정 반영 실패:', err);
     }
   };
 
@@ -77,7 +91,7 @@ function RoomSettingModal({ visible, onClose, onConfirm, initialData = {}, roomI
                 className={`quiz-item ${q.quiz_id === selectedQuiz ? 'selected' : ''}`}
                 onClick={() => {
                   setSelectedQuiz(q.quiz_id);
-                  setQuestionCount(q.total_questions || 5); // 퀴즈 선택 시 총 문제 수 자동 세팅
+                  setQuestionCount(q.total_questions || 5);
                 }}
               >
                 <strong>{q.title}</strong>
