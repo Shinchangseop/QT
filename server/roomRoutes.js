@@ -81,5 +81,23 @@ router.get('/:roomId', async (req, res) => {
   }
 });
 
+router.post('/update/:roomId', async (req, res) => {
+  const { roomId } = req.params;
+  const { title, password, use_timer, use_hint, quiz_id } = req.body;
+  try {
+    await db.query(`
+      UPDATE rooms
+      SET title = $1, password = $2, use_timer = $3, use_hint = $4, quiz_id = $5
+      WHERE room_id = $6
+    `, [title, password, use_timer, use_hint, quiz_id, roomId]);
+
+    const updated = await db.query('SELECT * FROM rooms WHERE room_id = $1', [roomId]);
+    res.json(updated.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'DB 업데이트 실패' });
+  }
+});
+
 
 module.exports = router;

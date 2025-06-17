@@ -14,6 +14,7 @@ function Room() {
   const chatEndRef = useRef(null);
   const [playerList, setPlayerList] = useState(Array(8).fill(null));
   const navigate = useNavigate();
+  const [showSettingModal, setShowSettingModal] = useState(false);
 
   const nickname = localStorage.getItem('nickname') || '익명';
     const isHost = roomInfo && nickname === roomInfo.created_by;
@@ -165,6 +166,7 @@ const handleSendMessage = () => {
                       <button
                         className="btn-orange"
                         style={{ flex: 2 }}
+                        onClick={() => setShowSettingModal(true)}
                       >
                         ⚙️
                       </button>
@@ -247,6 +249,28 @@ const handleSendMessage = () => {
           </div>
         )}
       </div>
+      <RoomSettingModal
+        visible={showSettingModal}
+        initialData={roomInfo}
+        onClose={() => setShowSettingModal(false)}
+        onConfirm={async (newSettings) => {
+          try {
+            const res = await fetch(`/api/room/update/${roomId}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(newSettings),
+            });
+            if (!res.ok) throw new Error('업데이트 실패');
+            const updated = await res.json();
+            setRoomInfo(updated);  // UI에 반영
+            setShowSettingModal(false);
+            alert('설정이 변경되었습니다.');
+          } catch (err) {
+            console.error(err);
+            alert('설정 변경 중 오류 발생');
+          }
+        }}
+      />
     </Layout>
   );
 }
