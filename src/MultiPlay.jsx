@@ -22,18 +22,15 @@ function QuizHeader({ roomTitle, quizTitle, currentIdx, total, timer }) {
       marginBottom: '12px',
       textAlign: 'center'
     }}>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        fontWeight: 'bold',
-        fontSize: '22px',
-        marginBottom: '2px',
-        padding: '0 28px',
-      }}>
-        <span>{roomTitle}</span>
-        <span>{quizTitle}</span>
-      </div>
+    <div style={{
+      fontWeight: 'bold',
+      fontSize: '22px',
+      marginBottom: '2px',
+      textAlign: 'center',
+      width: '100%',
+    }}>
+      {roomTitle} ({quizTitle})
+    </div>
       <div style={{
         fontSize: '20px',
         fontWeight: 'bold',
